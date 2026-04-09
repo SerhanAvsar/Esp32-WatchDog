@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Kayıtları | Güvenlik Paneli</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .table-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #fff;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        th {
+            font-weight: 600;
+            color: #a0aec0;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .distance-badge {
+            background: rgba(49, 151, 149, 0.2);
+            color: #4fd1c5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #a0aec0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4fd1c5;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #38b2ac;
+        }
+        .refresh-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            float: right;
+            margin-bottom: 15px;
+        }
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar glass-nav">
+        <div class="nav-brand">
+            <div class="logo-icon small-icon"></div>
+            <span>Güvenlik Sistemi</span>
+        </div>
+        <div class="nav-actions">
+            <button id="logoutBtn" class="btn secondary-btn small-btn">Çıkış Yap</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-wrapper fade-in">
+        <header class="page-header">
+            <a href="dashboard.html" class="back-link">← Panele Dön</a>
+            <h2>Giriş Kayıtları</h2>
+            <p>HC-SR04 Uzaklık Sensöründen alınan güncel giriş/çıkış verileri.</p>
+        </header>
+
+        <button id="refreshBtn" class="refresh-btn">🔄 Yenile</button>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Olay Tarihi / Saati</th>
+                        <th>Ölçülen Mesafe</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <tr>
+                        <td colspan="4" class="no-data">Yükleniyor...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="js/logs.js"></script>
+</body>
+</html>

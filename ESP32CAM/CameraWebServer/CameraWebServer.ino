@@ -1,5 +1,6 @@
 #include "esp_camera.h"
 #include <WiFi.h>
+#include <HTTPClient.h> // Node.js Node Server'a veri göndermek için eklendi
 
 // ===========================
 // Select camera model in board_config.h
@@ -125,6 +126,35 @@ void setup() {
 }
 
 void loop() {
-  // Do nothing. Everything is done in another task by the web server
-  delay(10000);
+  if (Serial.available()) {
+    String incomingData = Serial.readStringUntil('\n');
+    incomingData.trim(); // Satır sonu karakterlerini temizle
+
+    if (incomingData.startsWith("DISTANCE:")) {
+      // Örn: DISTANCE:45.50
+      String distanceVal = incomingData.substring(9);
+      
+      // Node.js Sunucusuna POST isteği at
+      if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        
+        // DİKKAT: 192.168.1.X kısmını kendi Node.js sunucunuzun yerel IP adresiyle değiştirin!
+        http.begin("http://192.168.1.X:3000/api/sensor");
+        http.addHeader("Content-Type", "application/json");
+        
+        String postData = "{\"distance\": " + distanceVal + "}";
+        int httpResponseCode = http.POST(postData);
+        
+        if (httpResponseCode > 0) {
+          Serial.printf("HTTP POST basarili, Kod: %d\n", httpResponseCode);
+        } else {
+          Serial.printf("HTTP POST basarisiz, Hata Kodu: %s\n", http.errorToString(httpResponseCode).c_str());
+        }
+        
+        http.end();
+      } else {
+        Serial.println("WiFi baglantisi yok!");
+      }
+    }
+  }
 }

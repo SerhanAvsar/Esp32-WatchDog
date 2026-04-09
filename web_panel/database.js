@@ -16,7 +16,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
             password TEXT
         )`, (err) => {
             if (err) {
-                console.error('Error creating table', err.message);
+                console.error('Error creating users table', err.message);
             } else {
                 // Insert default user
                 const insert = 'INSERT INTO users (username, password) VALUES (?, ?)';
@@ -30,6 +30,19 @@ const db = new sqlite3.Database(dbPath, (err) => {
                         console.log('Default user (123/123) successfully registered.');
                     }
                 });
+            }
+        });
+
+        // Create entry_logs table
+        db.run(`CREATE TABLE IF NOT EXISTS entry_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            distance REAL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating entry_logs table', err.message);
+            } else {
+                console.log('entry_logs table is ready.');
             }
         });
     }

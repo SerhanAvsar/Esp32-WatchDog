@@ -35,6 +35,42 @@ app.post('/api/login', (req, res) => {
     });
 });
 
+// API Endpoint: Receive Sensor Data
+app.post('/api/sensor', (req, res) => {
+    const { distance } = req.body;
+    
+    if (distance === undefined || distance === null) {
+        return res.status(400).json({ success: false, message: 'Geçersiz veri.' });
+    }
+
+    // In Arduino code we only send when distance is between 10 and 100,
+    // but let's double check here just in case.
+    if (distance >= 10 && distance <= 100) {
+        const query = 'INSERT INTO entry_logs (distance) VALUES (?)';
+        db.run(query, [distance], function(err) {
+            if (err) {
+                console.error('Error inserting log:', err.message);
+                return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
+            }
+            res.json({ success: true, message: 'Kayıt eklendi.', id: this.lastID });
+        });
+    } else {
+        res.status(400).json({ success: false, message: 'Mesafe sınırların dışında (10cm - 1m).' });
+    }
+});
+
+// API Endpoint: Get Logs
+app.get('/api/logs', (req, res) => {
+    const query = 'SELECT * FROM entry_logs ORDER BY timestamp DESC LIMIT 100';
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching logs:', err.message);
+            return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
+        }
+        res.json({ success: true, logs: rows });
+    });
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
