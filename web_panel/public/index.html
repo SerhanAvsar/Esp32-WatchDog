@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş | Güvenlik Paneli</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="flex-center">
+    <div class="login-container glass-card fade-in">
+        <div class="logo-area">
+            <div class="logo-icon"></div>
+            <h1>Yönetim Paneli</h1>
+            <p>Sisteme erişmek için giriş yapın</p>
+        </div>
+        
+        <form id="loginForm" class="login-form">
+            <div class="input-group">
+                <label for="username">Kullanıcı Adı</label>
+                <input type="text" id="username" name="username" placeholder="Örn: 123" required autocomplete="off">
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Şifre</label>
+                <input type="password" id="password" name="password" placeholder="Örn: 123" required>
+            </div>
+            
+            <div id="errorMessage" class="error-msg"></div>
+
+            <button type="submit" id="loginBtn" class="btn primary-btn">
+                <span class="btn-text">Giriş Yap</span>
+                <span class="spinner hidden"></span>
+            </button>
+        </form>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

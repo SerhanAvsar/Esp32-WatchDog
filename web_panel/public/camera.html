@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canlı Kamera | Güvenlik Paneli</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar glass-nav">
+        <div class="nav-brand">
+            <a href="dashboard.html" class="back-link">← Geri</a>
+            <span>ESP32-CAM Canlı Akış</span>
+        </div>
+    </nav>
+
+    <main class="dashboard-wrapper fade-in block-center">
+        <div class="camera-container glass-card">
+            <div class="camera-header">
+                <h3>Kamera 1 - Ana Giriş</h3>
+                <span class="status-badge online">● Canlı Yayın</span>
+            </div>
+            
+            <div class="stream-wrapper">
+                <!-- ESP32-CAM stream will be loaded here. Replace the IP address with your actual ESP32 IP -->
+                <img id="stream" src="http://192.168.1.100:81/stream" alt="Kamera bağlantısı bekleniyor. Lütfen ESP32-CAM IP adresini kontrol edin." class="stream-img">
+            </div>
+
+            <div class="camera-controls">
+                <div class="input-group inline-group">
+                    <label for="espIp">ESP32 IP Adresi:</label>
+                    <input type="text" id="espIp" value="http://192.168.1.100:81/stream">
+                    <button id="updateIpBtn" class="btn primary-btn small-btn">Uygula</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Check session
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        // Handle IP update
+        document.getElementById('updateIpBtn').addEventListener('click', () => {
+            const newIp = document.getElementById('espIp').value;
+            const streamImg = document.getElementById('stream');
+            
+            // Reload stream
+            streamImg.src = '';
+            setTimeout(() => {
+                streamImg.src = newIp;
+            }, 500);
+        });
+    </script>
+</body>
+</html>

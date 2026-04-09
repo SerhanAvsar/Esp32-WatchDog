@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontrol Paneli | Güvenlik Paneli</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar glass-nav">
+        <div class="nav-brand">
+            <div class="logo-icon small-icon"></div>
+            <span>Güvenlik Sistemi</span>
+        </div>
+        <div class="nav-actions">
+            <span id="userGreeting">Hoş Geldiniz</span>
+            <button id="logoutBtn" class="btn secondary-btn small-btn">Çıkış Yap</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-wrapper fade-in">
+        <header class="page-header">
+            <h2>Kontrol Paneli</h2>
+            <p>Sistem modüllerine aşağıdan erişebilirsiniz.</p>
+        </header>
+
+        <div class="grid-cards">
+            <!-- Camera Card -->
+            <a href="camera.html" class="dashboard-card action-card">
+                <div class="card-icon camera-icon">📷</div>
+                <div class="card-content">
+                    <h3>Canlı Kamera (ESP32)</h3>
+                    <p>ESP32-CAM modülünden anlık görüntü akışını izleyin.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <!-- Entry Logs Card -->
+            <a href="#" class="dashboard-card action-card disabled-card">
+                <div class="card-icon logs-icon">📋</div>
+                <div class="card-content">
+                    <h3>Giriş Kayıtları</h3>
+                    <p>Geçmiş giriş denemeleri ve yetki kayıtlarını inceleyin.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <!-- Video Recordings Card -->
+            <a href="#" class="dashboard-card action-card disabled-card">
+                <div class="card-icon video-icon">🎞️</div>
+                <div class="card-content">
+                    <h3>Video Kayıtları</h3>
+                    <p>Sistem tarafından kaydedilen geçmiş videoları izleyin.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+        </div>
+    </main>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
