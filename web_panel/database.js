@@ -45,6 +45,19 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 console.log('entry_logs table is ready.');
             }
         });
+
+        // Create gas_logs table
+        db.run(`CREATE TABLE IF NOT EXISTS gas_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            gas_value INTEGER,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating gas_logs table', err.message);
+            } else {
+                console.log('gas_logs table is ready.');
+            }
+        });
     }
 });
 

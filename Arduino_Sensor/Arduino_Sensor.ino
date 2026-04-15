@@ -2,6 +2,10 @@
 const int trigPin = 9;
 const int echoPin = 10;
 
+// MQ-2 Sensör Pin ve Eşik Değeri
+const int mq2Pin = A0;
+const int gasThreshold = 400; // Bu değeri ortamınıza göre ayarlayabilirsiniz
+
 // Değişkenler
 long duration;
 float distance;
@@ -13,6 +17,9 @@ void setup() {
   
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+  
+  // A0 varsayılan olarak analog giriştir, pinMode yazmaya gerek yoktur 
+  // ama belirgin olması için bırakılabilir
 }
 
 void loop() {
@@ -40,6 +47,21 @@ void loop() {
       // Format: DISTANCE:45.50
       Serial.print("DISTANCE:");
       Serial.println(distance);
+    }
+  }
+
+  // === MQ-2 GAZ SENSÖRÜ KONTROLÜ ===
+  int gasValue = analogRead(mq2Pin);
+  
+  // Okunan değer eşik değerinden büyükse tehlike var demektir
+  if (gasValue > gasThreshold) {
+    if (millis() - lastSendTime > sendInterval) {
+      lastSendTime = millis();
+      
+      // ESP32'ye gaz uyarısını gönder
+      // Format: GAS:450
+      Serial.print("GAS:");
+      Serial.println(gasValue);
     }
   }
   

@@ -71,6 +71,36 @@ app.get('/api/logs', (req, res) => {
     });
 });
 
+// API Endpoint: Receive Gas Sensor Data
+app.post('/api/gas', (req, res) => {
+    const { gas_value } = req.body;
+    
+    if (gas_value === undefined || gas_value === null) {
+        return res.status(400).json({ success: false, message: 'Geçersiz veri.' });
+    }
+
+    const query = 'INSERT INTO gas_logs (gas_value) VALUES (?)';
+    db.run(query, [gas_value], function(err) {
+        if (err) {
+            console.error('Error inserting gas log:', err.message);
+            return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
+        }
+        res.json({ success: true, message: 'Gaz/Duman alarmı eklendi.', id: this.lastID });
+    });
+});
+
+// API Endpoint: Get Gas Logs
+app.get('/api/gas_logs', (req, res) => {
+    const query = 'SELECT * FROM gas_logs ORDER BY timestamp DESC LIMIT 100';
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching gas logs:', err.message);
+            return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
+        }
+        res.json({ success: true, logs: rows });
+    });
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);

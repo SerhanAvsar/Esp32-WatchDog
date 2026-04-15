@@ -155,6 +155,27 @@ void loop() {
       } else {
         Serial.println("WiFi baglantisi yok!");
       }
+    } else if (incomingData.startsWith("GAS:")) {
+      // Örn: GAS:450
+      String gasVal = incomingData.substring(4);
+      
+      if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        
+        http.begin("http://192.168.1.X:3000/api/gas");
+        http.addHeader("Content-Type", "application/json");
+        
+        String postData = "{\"gas_value\": " + gasVal + "}";
+        int httpResponseCode = http.POST(postData);
+        
+        if (httpResponseCode > 0) {
+          Serial.printf("GAS HTTP POST basarili, Kod: %d\n", httpResponseCode);
+        } else {
+          Serial.printf("GAS HTTP POST basarisiz, Hata Kodu: %s\n", http.errorToString(httpResponseCode).c_str());
+        }
+        
+        http.end();
+      }
     }
   }
 }
