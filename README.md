@@ -6,15 +6,25 @@ Bu belge, sistemi **sıfırdan alıp tamamen çalışır bir noktaya getirebilme
 
 ## Aşama 1: Ağ ve IP Ayarlarının Hazırlanması (En Kritik Adım)
 
-Sisteminizin kalbi olan Node.js sunucusu ile ESP32'nin birbirini bulabilmesi için adresleme yapmalısınız.
+Sisteminizin kalbi olan Node.js sunucusu ile ESP32'nin birbirini bulabilmesi için adresleme yapmalısınız. Lütfen hangi ağı (İnterneti) kullanacaksanız o yönergeyi uygulayın:
 
-1. Bilgisayarınızda (başlat menüsü) `cmd` yazarak Komut İstemcisini açın.
+### Seçenek A: Ev İnterneti / Standart Modem Kullanımı (Önerilen)
+1. Bilgisayarınızın ve ESP32'nin aynı modeme bağlı olacağından emin olun. Bilgisayarınızda (başlat menüsü) `cmd` yazarak Komut İstemcisini açın.
 2. Siyah ekrana `ipconfig` yazıp Enter'a basın.
-3. Çıkan listede kablosuz ağınız veya ethernetinize ait **IPv4 Address** satırını bulun (Örn: `192.168.1.45`). Bu sayıyı kopyalayın veya bir yere not edin.
+3. Çıkan listede ağınıza ait **IPv4 Address** satırını bulun (Örn: `192.168.1.45`). Bu sayıyı kopyalayın.
 4. Projenizdeki `ESP32CAM/CameraWebServer/CameraWebServer.ino` dosyasını Arduino IDE ile açın.
-5. **Satır 12-13:** Wi-Fi adınızı (`ssid`) ve Şifrenizi (`password`) kendi evinizdeki geçerli bilgilere göre mutlak suretle düzeltin.
-6. **Satır 142 ve 165 civarı:** Dosyanın aşağılarındaki iki ayrı HTTP bağlantı kodunda göreceğiniz `http://192.168.1.X:3000...` kısımlarındaki `192.168.1.X` bölümünü TAMAMEN SİLİP kendi aldığınız IPv4 adresini yazın. *(Eğer bunu yapmazsanız sensör verileri panele ASLA gelemez!)*
-7. Dosyayı kaydedin.
+5. **Satır 12-13:** Evinizdeki modemin Wi-Fi adını (`ssid`) ve Şifresini (`password`) girin.
+6. **Satır 142 ve 165 civarı:** Dosyanın aşağılarındaki iki ayrı HTTP bağlantı kodunda göreceğiniz `http://192.168.1.X:3000...` kısımlarındaki IP bölümünü SİLİP kendi aldığınız IPv4 adresini yazın ve kaydedin.
+
+### Seçenek B: Telefondan Mobil Veri (Hotspot) Kullanımı
+*DİKKAT: Telefonunuz her Hotspot açıldığında bilgisayarınıza rastgele YENİ bir IP (Örn: 192.168.43.60) atar. Yani her aç kapa yaptığınızda ESP32'ye yeni IP'yi Öğretmek (yeniden kod yüklemek) zorunda kalabilirsiniz.*
+*ÖNEMLİ: İphone (Apple) cihazlarda donanımsal güvenlik kalkanı (Client Isolation) bulunduğu için iki cihazın aynı Hotspot'ta birbirine veri yollaması genellikle engellenir. Bu sistem Android hotspot'ları ile güvenle çalışır.*
+1. Telefonunuzun internet paylaşımını (Hotspot) açın ve bilgisayarınızın Wi-Fi'sini bu ağa bağlayın.
+2. Bilgisayarınız **kesinlikle telefonunuza bağlıyken** `cmd` açıp `ipconfig` yazın.
+3. Gelen listedeki yepyeni **IPv4 Address** numarasını kopyalayın.
+4. `CameraWebServer.ino` dosyasını açın.
+5. **Satır 12-13:** Wi-Fi adına Telefonunuzun Hotspot Adını, Şifresine ise telefon Hotspot şifresini girin. (Türkçe harf olmamalıdır).
+6. **Satır 142 ve 165 civarı:** Dosyadaki IP kısımlarına o an telefonunuzun tayin ettiği o yepyeni "IPv4 adresini" yazın ve kaydedin.
 
 ---
 
@@ -64,7 +74,7 @@ Sistemlerin çalışması için onlara USB şarj cihazıyla veya ortak kanaldan 
 
 ### İki Kartın Birbiriyle Haberleşmesi (Can Damarı):
 Sensör bilgisinin ESP32'den panele gidebilmesi için iki kartın bir diyalog kurması lazımdır.
-- Arduino **TX (Pin 1)** ➔ ESP32 **RX (UOR / UORD)** _(Arduino hoparlördür konuşur, ESP32 kulaktır dinler. Birinin TX'i, dilerinin RX'ine ÇAPRAZ ÇAKILIR.)_
+- Arduino **3. Pin (TX)** ➔ ESP32 **RX (UOR / UORD)** _(Sinyal çakışmasını engellemek için yeni Arduino yazılımında 3 numaralı pin iletişim teli yapılmıştır.)_
 - Arduino **GND** ➔ ESP32 **GND** _(Ayrıca topraklama hattından birbirlerini tanımaları şarttır. İki kart arasından bir GND teli çekilmek zorundadır.)_
 _*(Uyarı: Çalışma anında ESP32'nin TX pinine veya Arduino'nun RX pinine hiçbir şey BAĞLANMAZ. Yukarıdaki ikisini yapmanız yeterlidir).*_
 

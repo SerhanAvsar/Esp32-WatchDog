@@ -1,3 +1,10 @@
+#include <SoftwareSerial.h>
+
+// ESP32 İle İletişim İçin Yeni Çizgi (SoftwareSerial)
+// RX = Pin 2, TX = Pin 3
+// ARDUINO'nun 3. Pini (TX) -> ESP32'nin RX (U0R) pinine bağlanacak!
+SoftwareSerial espSerial(2, 3);
+
 // HC-SR04 Sensör Pin Tanımlamaları
 const int trigPin = 9;
 const int echoPin = 10;
@@ -13,13 +20,14 @@ unsigned long lastSendTime = 0;
 const int sendInterval = 2000; // 2 saniye cooldown
 
 void setup() {
-  Serial.begin(115200); // ESP32 ile aynı baud rate
+  Serial.begin(115200);     // Sizin bilgisayardan görmeniz için bağlanan USB seri port
+  espSerial.begin(115200);  // ESP32'ye giden yeni güvenli hat
   
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
   
   // A0 varsayılan olarak analog giriştir, pinMode yazmaya gerek yoktur 
-  // ama belirgin olması için bırakılabilir
+  Serial.println("Sistem Baslatildi. Sensorler dinleniyor...");
 }
 
 void loop() {
@@ -43,10 +51,14 @@ void loop() {
     if (millis() - lastSendTime > sendInterval) {
       lastSendTime = millis();
       
-      // ESP32'ye veriyi gönder
-      // Format: DISTANCE:45.50
-      Serial.print("DISTANCE:");
+      // Bilgisayardan Görme (Log)
+      Serial.print("Mesafe Algilandi: ");
       Serial.println(distance);
+
+      // ESP32'ye veriyi gönder (GERÇEK HAT)
+      // Format: DISTANCE:45.50
+      espSerial.print("DISTANCE:");
+      espSerial.println(distance);
     }
   }
 
@@ -57,11 +69,15 @@ void loop() {
   if (gasValue > gasThreshold) {
     if (millis() - lastSendTime > sendInterval) {
       lastSendTime = millis();
-      
-      // ESP32'ye gaz uyarısını gönder
-      // Format: GAS:450
-      Serial.print("GAS:");
+
+      // Bilgisayardan Görme (Log)
+      Serial.print("Gaz/Duman Algilandi! Seviye: ");
       Serial.println(gasValue);
+      
+      // ESP32'ye gaz uyarısını gönder (GERÇEK HAT)
+      // Format: GAS:450
+      espSerial.print("GAS:");
+      espSerial.println(gasValue);
     }
   }
   
