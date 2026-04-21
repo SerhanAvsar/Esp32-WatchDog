@@ -1,73 +1,85 @@
-# Esp32-Security & HC-SR04 Uzaklık Sensörü Entegrasyon Kılavuzu
+# ESP32-Security V2: Tam Kurulum ve Donanım Kılavuzu
 
-Bu belge, FTDI (Programlayıcı) modülü olmayan kullanıcıların, mevcutta bulunan Arduino kartlarını bir dönüştürücü gibi kullanarak **ESP32-CAM** ve **Arduino** cihazlarına nasıl kod yükleyeceğini ve sistemi donanımsal olarak nasıl birleştireceğini anlatır. Lütfen adımları atlamadan sırayla uygulayın.
-
----
-
-## Aşama 1: ESP32 Kodunu Bilgisayarınıza (IP'nize) Göre Ayarlama
-Bu adımı kodu karta yüklemeden **önce** yapmalısınız:
-
-1. Bilgisayarınızın arama (Start) menüsüne `cmd` yazıp açın ve siyah ekrana `ipconfig` yazarak enter'a basın.
-2. Çıkan listede **IPv4 Address** yazan değer (Örn: `192.168.1.45`) sizin yerel IP adresinizdir. Bunu kopyalayın.
-3. Proje dizinindeki `ESP32CAM/CameraWebServer/CameraWebServer.ino` dosyasını açın.
-4. Alt satırlarda bulunan `http.begin("http://192.168.1.X:3000/api/sensor");` bölümündeki `192.168.1.X` kısmını kopyaladığınız kendi IPv4 adresiniz ile değiştirip dosyayı kaydedin.
-5. Aynı dosyada 12. ve 13. satırlarda bulunan Wi-Fi adını (`ssid`) ve Şifreyi (`password`) kendi modeminizin bilgileriyle güncellemeyi unutmayın!
+Bu belge, sistemi **sıfırdan alıp tamamen çalışır bir noktaya getirebilmeniz için** yazılmış en güvenli ve hatasız kurulum rehberidir. Lütfen aşağıdaki 5 aşamayı **başka hiçbir işlem yapmadan, metinde yazdığı sırayla** uygulayın.
 
 ---
 
-## Aşama 2: Arduino Üzerinden ESP32-CAM'e Kod Yükleme (FTDI Olmadan)
-Şimdi o kodu bilgisayardan çıkartıp doğrudan ESP32-CAM'in içine göndereceğiz:
+## Aşama 1: Ağ ve IP Ayarlarının Hazırlanması (En Kritik Adım)
 
-1. Arduino'nun USB kablosunu bilgisayarınızdan çıkartın ve Arduino boşta dursun.
-2. **(Atlanmamalı)** Arduino kartınızdaki **RESET** pinini yine Arduino üzerindeki bir **GND (Toprak)** pinine bir jumper kablosuyla bağlayın. (Bu sayede Arduino geçici olarak kendi işlemcisini uyutup beyinsiz bir kabloya dönüşecek).
-3. ESP32-CAM ile Arduino'yu birbirine şu şekilde bağlayın:
+Sisteminizin kalbi olan Node.js sunucusu ile ESP32'nin birbirini bulabilmesi için adresleme yapmalısınız.
+
+1. Bilgisayarınızda (başlat menüsü) `cmd` yazarak Komut İstemcisini açın.
+2. Siyah ekrana `ipconfig` yazıp Enter'a basın.
+3. Çıkan listede kablosuz ağınız veya ethernetinize ait **IPv4 Address** satırını bulun (Örn: `192.168.1.45`). Bu sayıyı kopyalayın veya bir yere not edin.
+4. Projenizdeki `ESP32CAM/CameraWebServer/CameraWebServer.ino` dosyasını Arduino IDE ile açın.
+5. **Satır 12-13:** Wi-Fi adınızı (`ssid`) ve Şifrenizi (`password`) kendi evinizdeki geçerli bilgilere göre mutlak suretle düzeltin.
+6. **Satır 142 ve 165 civarı:** Dosyanın aşağılarındaki iki ayrı HTTP bağlantı kodunda göreceğiniz `http://192.168.1.X:3000...` kısımlarındaki `192.168.1.X` bölümünü TAMAMEN SİLİP kendi aldığınız IPv4 adresini yazın. *(Eğer bunu yapmazsanız sensör verileri panele ASLA gelemez!)*
+7. Dosyayı kaydedin.
+
+---
+
+## Aşama 2: Kodu ESP32-CAM'e Yüklemek (Arduino'yu Sadece Kablo Olarak Kullanma Modu)
+
+*DİKKAT: Bu aşama sadece koda ESP32'yi öğretmek içindir. İşlem bitince kurduğumuz bu "Upload" devresini tamamen bozacaksınız.*
+
+1. Arduino ve ESP32'nin tüm kablolarını sökün. İkisi de tamamen boş kalsın.
+2. **(Zorunlu Bypass)** Arduino üzerindeki **RESET** pinini yine Arduino üzerindeki bir **GND** pinine jumper kablosuyla direkt bağlayın. *(Bu hareket, Arduino beynini geçici kapatır).*
+3. ESP32-CAM ile Arduino'yu **Yalnızca Yükleme Yapmak İçin** şöyle bağlayın:
    - Arduino **5V** ➔ ESP32 **5V**
    - Arduino **GND** ➔ ESP32 **GND**
-   - Arduino **RX (Pin 0)** ➔ ESP32 **UOT (veya UORD / RX)**
-   - Arduino **TX (Pin 1)** ➔ ESP32 **UOR (veya UOTD / TX)**
-4. **(Yükleme Modu Kilidi)**: ESP32'nin kod hafızasını kırmak için, ESP32 üzerindeki **IO0 (GPIO 0)** pinini kendi **GND** pinine bağlayın.
-5. Arduino'yu USB üzerinden bilgisayara takın.
-6. Arduino IDE içerisinden _ESP32 Wrover Module_ veya _AI Thinker ESP32-CAM_ modelini ve bilgisayarınızdaki bağlı COM Portunu seçin.
-7. "Yükle (Upload)" butonuna basın. (*Siyah ekranda yükleme esnasında "Connecting..." yazısında çok uzun süre kalırsa, ESP32'nin arkasındaki ufak RST/Reset butonuna 1 saniye basılı tutmanız gerekebilir*).
-8. Yükleme tamamen bittiğinde ("Done Uploading"), Arduino'nun USB kablosunu bilgisayardan **ÇEKİN**.
-9. Hem **IO0 ➔ GND** kablosunu hem de Arduino üzerindeki **RESET ➔ GND** bypass kablosunu **MUTLAKA ÇIKARTIN.**
+   - Arduino **RX (Pin 0)** ➔ ESP32 **UOT (veya UOTD / TX)** *(Yükleme modunda RX-RX'e çapraz bağlanmaz. Düz bağlanır!)*
+   - Arduino **TX (Pin 1)** ➔ ESP32 **UOR (veya UORD / RX)** 
+4. **(Flash Kilidini Açma)** ESP32 üzerindeki **IO0 (GPIO 0)** pinini kendi **GND** pinine bağlayın.
+5. Arduino'yu USB üzerinden bilgisayara takın. Arduino IDE'den "_ESP32 Wrover Module_" veya "_AI Thinker ESP32-CAM_" seçip, portunuzu seçin ve **Yükle** butonuna basın.
+6. "Connecting..." yazısında kalırsa ESP32 arkasındaki küçük RST tuşuna bir anlık basın.
+7. Ekranda **Done Uploading** yazdığı an sistem kodu aldı demektir. USB kablosunu bilgisayardan ÇEKİN.
+8. **ÖNEMLİ:** Kurduğunuz bu aşamadaki BÜTÜN KABLOLARI SÖKÜP ÇÖPE ATMIŞ GİBİ SİSTEMLERİ BİRBİRİNDEN AYIRIN. O kablolar sadece yükleme içindi!
 
 ---
 
-## Aşama 3: Sensör (HC-SR04 ve MQ-2) Kodunu Arduino'ya Yükleme
-1. Arduino şu an tamamen kablolardan arındırılmış ve tek başına boş olmalı.
-2. Arduino'nuzu USB'den bilgisayarınıza geri takın.
-3. Bu kez Arduino IDE üzerinden `Arduino_Sensor/Arduino_Sensor.ino` dosyasını açın.
-4. Kart olarak menüden (Araçlar) kendi "Arduino Uno (veya Nano)"nuzu seçin ve "Yükle (Upload)" diyin.
-5. Yükleme bitince Arduino'yu bilgisayardan çekebilirsiniz. İki kartın da beyni şu an hazır.
+## Aşama 3: Kodu Sensör Ustası Olan Arduino'ya Yüklemek
+
+1. Bütün kablolardan arındırılmış, bomboş duran Arduino'nuzu USB üzerinden yalnız başına bilgisayara geri takın.
+2. Arduino IDE'yi açıp `Arduino_Sensor/Arduino_Sensor.ino` dosyasını açın.
+3. Kart kısmından "Arduino Uno"nuzu seçip (COM Port onaylayarak) **Yükle** deyin.
+4. "Done Uploading" yazısını görünce bilgisayardan çekin. Her iki kartın da beyni şu an görevlerine hazır.
 
 ---
 
-## Aşama 4: Sistemi Fiziksel Olarak Birleştirme (Kalıcı Donanım Kurulumu)
-İki cihaza da ayrı ayrı (adaptör veya telefon şarjı üzerinden ikili USB ile) enerji verdikten veya ortak bir 5V kanalından bağladıktan sonra son iletişimi kuralım:
+## Aşama 4: NIHAI ve KALICI SİSTEM BAĞLANTISI (Doğru Sensör Bağlantıları)
 
-1. **Sensörleri Arduino'ya takın:**
-   - **HC-SR04 (Uzaklık Sensörü):**
-     - VCC ➔ Arduino 5V
-     - GND ➔ Arduino GND
-     - Trig ➔ Arduino 9. Pin
-     - Echo ➔ Arduino 10. Pin
-   - **MQ-2 (Gaz/Duman Sensörü):**
-     - VCC ➔ Arduino 5V (HC-SR04 sensörünüzle aynı porta breadboard ile veya kabloları birleştirerek takabilirsiniz)
-     - GND ➔ Arduino GND
-     - A0 / Analog Out ➔ Arduino A0 Pini
+Sistemlerin çalışması için onlara USB şarj cihazıyla veya ortak kanaldan güç verdiğinizi (5V elektrik aldıklarını) varsayarak ana üretim devresini kuruyoruz:
 
-2. **Kartları Birbiriyle Haberleştirin:** 
-   - **Arduino TX (Pin 1)** ➔ **ESP32 RX (UOT/UORD)** _(Arduino sürekli konuşur, ESP32 bunu kulaklıktan dinler)_
-   - **Arduino GND** ➔ **ESP32 GND** _(Elektriksel sinyal kirliliğini (gürültü) önlemek ve iki cihazı aynı referansa sokmak için toprak pinleri ortaklanmalıdır)_
+### Sensörlerin Arduino'ya Bağlanması:
+1. **HC-SR04 Uzaklık Sensörü:**
+   - VCC ➔ Arduino **5V**
+   - GND ➔ Arduino **GND**
+   - Trig ➔ Arduino **9. Pin**
+   - Echo ➔ Arduino **10. Pin**
+2. **MQ-2 Gaz ve Duman Sensörü:**
+   - VCC ➔ Arduino **5V** *(Uzaklık sensörünün bağlandığı 5V girişine çoklayabilirsiniz)*
+   - GND ➔ Arduino **GND**
+   - A0 (Analog Çıkış) ➔ Arduino **A0** 
+   - D0 (Dijital Çıkış) ➔ ***ASLA BAĞLAMAYIN, BOŞ BIRAKIN.***
+
+### İki Kartın Birbiriyle Haberleşmesi (Can Damarı):
+Sensör bilgisinin ESP32'den panele gidebilmesi için iki kartın bir diyalog kurması lazımdır.
+- Arduino **TX (Pin 1)** ➔ ESP32 **RX (UOR / UORD)** _(Arduino hoparlördür konuşur, ESP32 kulaktır dinler. Birinin TX'i, dilerinin RX'ine ÇAPRAZ ÇAKILIR.)_
+- Arduino **GND** ➔ ESP32 **GND** _(Ayrıca topraklama hattından birbirlerini tanımaları şarttır. İki kart arasından bir GND teli çekilmek zorundadır.)_
+_*(Uyarı: Çalışma anında ESP32'nin TX pinine veya Arduino'nun RX pinine hiçbir şey BAĞLANMAZ. Yukarıdaki ikisini yapmanız yeterlidir).*_
 
 ---
 
-## Aşama 5: Node.js Panelini Çalıştırma ve Test
-1. Masaüstünüzdeki `Esp32-Security\web_panel` klasörüne gidip `start_server.bat` dosyasına tıklayarak Node.js sunucusunu ayağa kaldırın. (Alternatif olarak o dizinde komut satırını açıp `node server.js` yazabilirsiniz).
-2. Konsol ekranında `Server running at http://localhost:3000` veya _Connected to SQLite_ ibarelerini gördüğünüz emin olun.
-3. Sistemlere elektriği verin.
-4. Tarayıcınızdan `http://localhost:3000` adresine girip Giriş Kayıtları sekmesine gelin.
-5. HC-SR04 sensörünün karşısına (10cm - 1 metre arasına) elinizi koyduğunuzda veya MQ-2 sensörüne bir çakmak gazı/duman tuttuğunuzda; anlık veriler panelinizdeki ekrana tablo olarak düşecektir!
+## Aşama 5: Node.js Panelini "Doğru" Şekilde Çalıştırma (Kayıtların Düşmesini Sağlayan Adım)
 
-_Karşılaştığınız herhangi bir sorunda Node.js konsolundaki çıktıları veya Arduino IDE'deki Seri Monitör dökümlerini kontrol etmeyi unutmayın._
+Verilerin panelinize (dashboard'a) düşmemesinin en yaygın sebebi .HTML dosyalarına fareyle çift tıklanarak girilmesidir. Sistem böyle çalışmaz.
+
+1. Eğer açıksa Chrome'da o HTML sayfalarını dahil her şeyi tamamen kapatın.
+2. Masasütünüzdeki projenizin yani klasörünüzün `web_panel` kısımlarına gidin.
+3. Dosya dizininde göreceğiniz **`start_server.bat`** yazan dosyaya çift tıklayın. Siyah bir CMD ekranı açılacaktır. 
+4. O ekranda `Connected to the SQLite database` ve `Server running at http://...` benzeri uyarıları okuyacaksınız. **Ve o siyah ekranı ASLA kapatmayacaksınız (aşağı alabilirsiniz).** O siyah ekran kapalıyken sensörden veri gelmesi veya panele girmek imkansızdır.
+5. Tarayıcınızı (Google Chrome vb.) açıp URL çubuğuna şunu yazın: `http://localhost:3000` (Emniyet için IPv4 adresinizin adını yazarak; `http://192.168.1.45:3000` de diyebilirsiniz).
+6. Ana sayfaya ulaşacaksınız, "123" şifreleriyle Login olun. "Giriş Kayıtları" sayfasına gelin.
+7. Sensöre el kaldırın... Siyah Node.js ekranında "[BAŞARILI] Mesafe eklendi" yazacak ve yepyeni panellere şak diye veriler düşecek! 
+
+*(İleride farklı odalardan sensörleri görmek isterseniz tek yapacağınız evdeki telefon veya tabletinizin Google tarayıcısına o güncel IPv4 adresinizi (Örn: `http://192.168.1.45:3000`) yazmak olacaktır.)* Aksi halde telefonunuzdan panele giremezsiniz çünkü localhost o an kullanılan bilgisayarı temsil eder.
