@@ -103,7 +103,13 @@ app.get('/api/gas_logs', (req, res) => {
     });
 });
 
+// Sunucunun dinleyeceği Port ve (varsa) IP adresi. 
+// "0.0.0.0" yazarsanız bilgisayarınızın tüm IP'lerinden gelen veriyi kabul eder (Varsayılan).
+// Eğer sadece spesifik bir IP üzerinden (örneğin VPN, Hamachi veya statik IP) veri almak istiyorsanız,
+// o IP'yi buraya yazabilirsiniz (örn: '192.168.220.1' veya '10.37.38.48').
+const HOST = '0.0.0.0'; 
+
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+    console.log(`Server running at http://${HOST === '0.0.0.0' ? 'localhost (Tüm Ağlar)' : HOST}:${PORT}`);
 });
