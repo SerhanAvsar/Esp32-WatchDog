@@ -52,6 +52,7 @@ app.post('/api/sensor', (req, res) => {
                 console.error('Error inserting log:', err.message);
                 return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
             }
+            console.log(`[BAŞARILI] Mesafe verisi kaydedildi: ${distance} cm`);
             res.json({ success: true, message: 'Kayıt eklendi.', id: this.lastID });
         });
     } else {
@@ -85,6 +86,7 @@ app.post('/api/gas', (req, res) => {
             console.error('Error inserting gas log:', err.message);
             return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
         }
+        console.log(`[BAŞARILI] Gaz alarmı kaydedildi: Seviye ${gas_value}`);
         res.json({ success: true, message: 'Gaz/Duman alarmı eklendi.', id: this.lastID });
     });
 });

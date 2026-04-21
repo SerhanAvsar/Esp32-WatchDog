@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is logged in
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (!user) {
+    // Check if user is legally logged in
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn !== 'true') {
         window.location.href = 'index.html';
         return;
     }
@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout handler
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('username');
             window.location.href = 'index.html';
         });
     }
