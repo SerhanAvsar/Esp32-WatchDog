@@ -34,7 +34,7 @@ Bu adımı kodu karta yüklemeden **önce** yapmalısınız:
 
 ---
 
-## Aşama 3: Sensör (HC-SR04) Kodunu Arduino'ya Yükleme
+## Aşama 3: Sensör (HC-SR04 ve MQ-2) Kodunu Arduino'ya Yükleme
 1. Arduino şu an tamamen kablolardan arındırılmış ve tek başına boş olmalı.
 2. Arduino'nuzu USB'den bilgisayarınıza geri takın.
 3. Bu kez Arduino IDE üzerinden `Arduino_Sensor/Arduino_Sensor.ino` dosyasını açın.
@@ -46,11 +46,16 @@ Bu adımı kodu karta yüklemeden **önce** yapmalısınız:
 ## Aşama 4: Sistemi Fiziksel Olarak Birleştirme (Kalıcı Donanım Kurulumu)
 İki cihaza da ayrı ayrı (adaptör veya telefon şarjı üzerinden ikili USB ile) enerji verdikten veya ortak bir 5V kanalından bağladıktan sonra son iletişimi kuralım:
 
-1. **Sensörü (HC-SR04) Arduino'ya takın:**
-   - VCC ➔ Arduino 5V
-   - GND ➔ Arduino GND
-   - Trig ➔ Arduino 9. Pin
-   - Echo ➔ Arduino 10. Pin
+1. **Sensörleri Arduino'ya takın:**
+   - **HC-SR04 (Uzaklık Sensörü):**
+     - VCC ➔ Arduino 5V
+     - GND ➔ Arduino GND
+     - Trig ➔ Arduino 9. Pin
+     - Echo ➔ Arduino 10. Pin
+   - **MQ-2 (Gaz/Duman Sensörü):**
+     - VCC ➔ Arduino 5V (HC-SR04 sensörünüzle aynı porta breadboard ile veya kabloları birleştirerek takabilirsiniz)
+     - GND ➔ Arduino GND
+     - A0 / Analog Out ➔ Arduino A0 Pini
 
 2. **Kartları Birbiriyle Haberleştirin:** 
    - **Arduino TX (Pin 1)** ➔ **ESP32 RX (UOT/UORD)** _(Arduino sürekli konuşur, ESP32 bunu kulaklıktan dinler)_
@@ -63,6 +68,6 @@ Bu adımı kodu karta yüklemeden **önce** yapmalısınız:
 2. Konsol ekranında `Server running at http://localhost:3000` veya _Connected to SQLite_ ibarelerini gördüğünüz emin olun.
 3. Sistemlere elektriği verin.
 4. Tarayıcınızdan `http://localhost:3000` adresine girip Giriş Kayıtları sekmesine gelin.
-5. HC-SR04 sensörünün karşısına (10cm - 1 metre arasına) elinizi koyduğunuz anda anlık veriler panelinizdeki ekrana tablo olarak düşecektir!
+5. HC-SR04 sensörünün karşısına (10cm - 1 metre arasına) elinizi koyduğunuzda veya MQ-2 sensörüne bir çakmak gazı/duman tuttuğunuzda; anlık veriler panelinizdeki ekrana tablo olarak düşecektir!
 
 _Karşılaştığınız herhangi bir sorunda Node.js konsolundaki çıktıları veya Arduino IDE'deki Seri Monitör dökümlerini kontrol etmeyi unutmayın._
