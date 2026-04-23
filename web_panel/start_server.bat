@@ -3,6 +3,6 @@ title Guvenlik Paneli Sunucusu
 echo =======================================
 echo     Guvenlik Paneli Baslatiliyor...
 echo =======================================
-cd /d "C:\Users\omerf\Desktop\Esp32-Security\web_panel"
+cd /d "%~dp0"
 node server.js
 pause

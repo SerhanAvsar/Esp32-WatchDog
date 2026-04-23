@@ -21,7 +21,7 @@ const int sendInterval = 2000; // 2 saniye cooldown
 
 void setup() {
   Serial.begin(115200);     // Sizin bilgisayardan görmeniz için bağlanan USB seri port
-  espSerial.begin(115200);  // ESP32'ye giden yeni güvenli hat
+  espSerial.begin(9600);    // ESP32'ye giden yeni güvenli ve yavaş hat (115200 ÇÖKERTİR!)
   
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -62,24 +62,20 @@ void loop() {
     }
   }
 
-  // === MQ-2 GAZ SENSÖRÜ KONTROLÜ ===
+  // === MQ-2 GAZ SENSÖRÜ KONTROLÜ (Geçici Olarak Kapatıldı) ===
+  /*
   int gasValue = analogRead(mq2Pin);
   
-  // Okunan değer eşik değerinden büyükse tehlike var demektir
   if (gasValue > gasThreshold) {
     if (millis() - lastSendTime > sendInterval) {
       lastSendTime = millis();
-
-      // Bilgisayardan Görme (Log)
       Serial.print("Gaz/Duman Algilandi! Seviye: ");
       Serial.println(gasValue);
-      
-      // ESP32'ye gaz uyarısını gönder (GERÇEK HAT)
-      // Format: GAS:450
       espSerial.print("GAS:");
       espSerial.println(gasValue);
     }
   }
+  */
   
   // Kısa bir bekleme
   delay(100);

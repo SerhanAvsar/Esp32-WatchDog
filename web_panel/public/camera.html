@@ -9,9 +9,14 @@
 </head>
 <body>
     <nav class="navbar glass-nav">
-        <div class="nav-brand">
-            <a href="dashboard.html" class="back-link">← Geri</a>
-            <span>ESP32-CAM Canlı Akış</span>
+        <div class="nav-brand" style="display: flex; align-items: center; gap: 15px;">
+            <a href="dashboard.html" class="btn secondary-btn small-btn" style="padding: 6px 12px; margin: 0; display: inline-flex; align-items: center; text-decoration: none;">← Geri</a>
+            <span style="margin: 0; line-height: 1;">ESP32-CAM Canlı Akış</span>
+        <div class="nav-actions">
+            <div class="notification-bell" onclick="window.location.href='logs.html'" title="Bildirimler">
+                🔔
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </div>
         </div>
     </nav>
 
@@ -55,5 +60,7 @@
             }, 500);
         });
     </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/notifications.js"></script>
 </body>
 </html>

@@ -1,8 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Check if user is legally logged in
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const isAdmin = localStorage.getItem('isAdmin');
     if (isLoggedIn !== 'true') {
         window.location.href = 'index.html';
+        return;
+    }
+
+    if (isAdmin !== 'true') {
+        document.querySelector('main').innerHTML = `
+            <div style="text-align: center; margin-top: 80px;">
+                <div style="font-size: 5rem; margin-bottom: 20px;">🚫</div>
+                <h2 style="color: #fc8181; font-size: 2.5rem; margin-bottom: 15px;">Yetkisiz Giriş!</h2>
+                <p style="color: #a0aec0; font-size: 1.2rem;">Standart kullanıcı hesabı ile sistem loglarına erişim yetkiniz bulunmamaktadır.<br>Lütfen yalnızca size izin verilen "Canlı Kamera" modülünü kullanın.</p>
+            </div>
+        `;
         return;
     }
 

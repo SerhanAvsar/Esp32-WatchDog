@@ -1,10 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     
-    // Auto redirect if already logged in
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-        window.location.href = 'dashboard.html';
-    }
+    // Otomatik giriş iptal edildi. Kullanıcı her seferinde giriş yapmak zorundadır.
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -39,6 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Save login state
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('isAdmin', data.user.is_admin === 1 ? 'true' : 'false');
                     
                     // Add success effect before redirecting
                     loginBtn.style.background = 'var(--success-color)';

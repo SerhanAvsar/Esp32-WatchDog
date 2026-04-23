@@ -13,21 +13,34 @@ const db = new sqlite3.Database(dbPath, (err) => {
         db.run(`CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password TEXT
+            password TEXT,
+            is_admin INTEGER DEFAULT 0
         )`, (err) => {
             if (err) {
                 console.error('Error creating users table', err.message);
             } else {
-                // Insert default user
-                const insert = 'INSERT INTO users (username, password) VALUES (?, ?)';
-                db.run(insert, ['123', '123'], (err) => {
+                db.run(`ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0`, (alterErr) => {
+                    // Sadece kolon İLK DEFA eklendiğinde (alterErr null ise) eski kullanıcıları admin yap.
+                    // Aksi takdirde (kolon zaten varsa hata döner) yeni eklenenleri elleme!
+                    if (!alterErr) {
+                        db.run(`UPDATE users SET is_admin = 1 WHERE is_admin IS NULL OR is_admin = 0`, (updateErr) => {
+                            if (!updateErr) {
+                                console.log('Legacy users upgraded to Admin successfully.');
+                            }
+                        });
+                    }
+                });
+
+                // Insert default user as admin
+                const insert = 'INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)';
+                db.run(insert, ['123', '123', 1], (err) => {
                     if (err) {
                         // User might already exist, which is fine
                         if (!err.message.includes('UNIQUE constraint failed')) {
                             console.error('Error inserting default user', err.message);
                         }
                     } else {
-                        console.log('Default user (123/123) successfully registered.');
+                        console.log('Default user (123/123) successfully registered as Admin.');
                     }
                 });
             }
@@ -56,6 +69,23 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 console.error('Error creating gas_logs table', err.message);
             } else {
                 console.log('gas_logs table is ready.');
+            }
+        });
+
+        // Create notifications table
+        db.run(`CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            type TEXT,
+            title TEXT,
+            message TEXT,
+            is_read INTEGER DEFAULT 0,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating notifications table', err.message);
+            } else {
+                console.log('notifications table is ready.');
             }
         });
     }

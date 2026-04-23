@@ -14,6 +14,10 @@
             <span>Güvenlik Sistemi</span>
         </div>
         <div class="nav-actions">
+            <div class="notification-bell" onclick="window.location.href='logs.html'" title="Bildirimler">
+                🔔
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </div>
             <span id="userGreeting">Hoş Geldiniz</span>
             <button id="logoutBtn" class="btn secondary-btn small-btn">Çıkış Yap</button>
         </div>
@@ -65,9 +69,21 @@
                 </div>
                 <div class="card-arrow">→</div>
             </a>
+
+            <!-- Admin User Management Card (Hidden by default for non-admins) -->
+            <a href="admin.html" id="adminCard" class="dashboard-card action-card" style="display: none; border-left: 4px solid #805ad5;">
+                <div class="card-icon" style="color: #805ad5;">🛡️</div>
+                <div class="card-content">
+                    <h3 style="color: #b794f4;">Kullanıcı Yönetimi</h3>
+                    <p>Sistemdeki kullanıcıları, şifreleri ve admin yetkilerini yönetin.</p>
+                </div>
+                <div class="card-arrow" style="color: #805ad5;">→</div>
+            </a>
         </div>
     </main>
 
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/notifications.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 </html>
