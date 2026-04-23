@@ -430,6 +430,10 @@ p { color: var(--text-muted); font-size: 14px; }
     border-left-color: #ef4444;
 }
 
+.toast-info {
+    border-left-color: #3b82f6;
+}
+
 .toast-icon {
     font-size: 24px;
 }

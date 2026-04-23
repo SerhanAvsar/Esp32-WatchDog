@@ -86,8 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dropdownBody.innerHTML = unreadData.map(n => {
             const isGas = n.type === 'gas';
-            const icon = isGas ? '🔥' : '⚠️';
-            const link = isGas ? 'gas_logs.html' : 'logs.html';
+            const isAudit = n.type === 'audit';
+            
+            let icon = '⚠️';
+            let link = 'logs.html';
+            
+            if (isGas) {
+                icon = '🔥';
+                link = 'gas_logs.html';
+            } else if (isAudit) {
+                icon = '🛡️';
+                link = 'admin.html';
+            }
+            
             // Sunucudan gelen timestamp'i düzgün gösterelim
             const time = new Date(n.timestamp).toLocaleString('tr-TR');
             
@@ -158,11 +169,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const isGas = data.type === 'gas';
+        const isAudit = data.type === 'audit';
+        
+        let toastClass = 'toast-warning';
+        let toastIcon = '⚠️';
+        
+        if (isGas) {
+            toastClass = 'toast-danger';
+            toastIcon = '🔥';
+        } else if (isAudit) {
+            toastClass = 'toast-info';
+            toastIcon = '🛡️';
+        }
         
         const toast = document.createElement('div');
-        toast.className = `toast fade-in-up ${isGas ? 'toast-danger' : 'toast-warning'}`;
+        toast.className = `toast fade-in-up ${toastClass}`;
         toast.innerHTML = `
-            <div class="toast-icon">${isGas ? '🔥' : '⚠️'}</div>
+            <div class="toast-icon">${toastIcon}</div>
             <div class="toast-content">
                 <h4>${data.title}</h4>
                 <p>${data.message}</p>

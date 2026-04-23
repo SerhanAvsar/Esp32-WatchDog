@@ -33,34 +33,24 @@
             </div>
 
             <div class="camera-controls">
-                <div class="input-group inline-group">
+                <div class="input-group inline-group" style="margin-bottom: 20px;">
                     <label for="espIp">ESP32 IP Adresi:</label>
                     <input type="text" id="espIp" value="http://192.168.1.100:81/stream">
                     <button id="updateIpBtn" class="btn primary-btn small-btn">Uygula</button>
+                </div>
+
+                <!-- Kayıt Paneli (Sadece Admin Görecek) -->
+                <div id="recordingPanel" class="input-group inline-group hidden" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                    <label for="recordDuration" style="color: #ef4444;">Kayıt Süresi (Dk): <br><small style="color:var(--text-muted);font-weight:normal;">0 = Süresiz</small></label>
+                    <input type="number" id="recordDuration" value="5" min="0" max="120" style="width: 80px;">
+                    <button id="recordBtn" class="btn primary-btn small-btn" style="background-color: #ef4444; box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.39);">Kayıt Başlat</button>
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
-        // Check session
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'index.html';
-        }
-
-        // Handle IP update
-        document.getElementById('updateIpBtn').addEventListener('click', () => {
-            const newIp = document.getElementById('espIp').value;
-            const streamImg = document.getElementById('stream');
-            
-            // Reload stream
-            streamImg.src = '';
-            setTimeout(() => {
-                streamImg.src = newIp;
-            }, 500);
-        });
-    </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/notifications.js"></script>
+    <script src="js/camera.js"></script>
 </body>
 </html>

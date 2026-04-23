@@ -15,11 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
         userGreeting.textContent = `Merhaba, ${username}`;
     }
 
-    // Show Admin Card if user is Admin
+    // Show Admin & Records Card if user is Admin
     const isAdmin = localStorage.getItem('isAdmin');
     const adminCard = document.getElementById('adminCard');
-    if (isAdmin === 'true' && adminCard) {
-        adminCard.style.display = 'flex';
+    const recordsCard = document.getElementById('recordsCard');
+    
+    if (isAdmin === 'true') {
+        if (adminCard) adminCard.style.display = 'flex';
+        if (recordsCard) recordsCard.style.display = 'flex';
     }
 
     // Handle Logout
@@ -34,16 +37,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle Video Recordings Card click for Standard Users
-    const videoCard = document.querySelector('.video-icon').parentElement;
-    if (videoCard) {
-        videoCard.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (isAdmin !== 'true') {
-                alert('Yetkisiz Giriş: Standart kullanıcıların video kayıtlarına erişim izni yoktur.');
-            } else {
-                alert('Video kayıtları modülü henüz yapım aşamasındadır.');
-            }
-        });
-    }
+
 });

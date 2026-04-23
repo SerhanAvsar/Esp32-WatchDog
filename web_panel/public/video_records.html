@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Kayıtları | Güvenlik Paneli</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .table-container {
+            background: rgba(49, 130, 206, 0.05); /* Slight blue tint */
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(49, 130, 206, 0.2);
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #fff;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        th {
+            font-weight: 600;
+            color: #63b3ed;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        tr:hover {
+            background: rgba(49, 130, 206, 0.05);
+        }
+        .download-btn {
+            background: rgba(49, 130, 206, 0.2);
+            color: #63b3ed;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(49, 130, 206, 0.5);
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .download-btn:hover {
+            background: rgba(49, 130, 206, 0.5);
+            color: #fff;
+        }
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #a0aec0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #63b3ed;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            background: rgba(49, 130, 206, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(49, 130, 206, 0.2);
+        }
+        .back-link:hover {
+            color: #fff;
+            background: rgba(49, 130, 206, 0.3);
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-icon">🛡️</span>
+            <h1>ESP32 Güvenlik Ağı</h1>
+        </div>
+        <div class="nav-menu">
+            <span id="userGreeting" class="user-greeting"></span>
+            <div class="notification-bell">
+                <span class="bell-icon">🔔</span>
+                <span class="notification-badge hidden" id="notifBadge">0</span>
+            </div>
+            <button id="logoutBtn" class="btn danger-btn small-btn">Çıkış Yap</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-wrapper fade-in block-center">
+        <div class="glass-card" style="width: 100%; max-width: 900px; padding: 30px;">
+            <a href="dashboard.html" class="back-link">← Panele Dön</a>
+            
+            <div class="camera-header">
+                <h3>🎞️ Video Kayıtları</h3>
+                <span class="status-badge online" style="background: rgba(49, 130, 206, 0.2); color: #63b3ed;">Yalnızca Yöneticiler</span>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dosya Adı</th>
+                            <th>Kayıt Boyutu</th>
+                            <th>Oluşturulma Tarihi</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody">
+                        <tr>
+                            <td colspan="4" class="no-data">Kayıtlar yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/video_records.js"></script>
+</body>
+</html>
