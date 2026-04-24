@@ -119,6 +119,20 @@
         </div>
     </main>
 
+    <!-- Video Player Modal -->
+    <div id="videoModal" class="modal hidden">
+        <div class="modal-content glass-card" style="max-width: 800px; padding: 20px;">
+            <div class="camera-header" style="margin-bottom: 15px;">
+                <h3 id="modalTitle">Video Oynatılıyor</h3>
+                <span class="status-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; cursor: pointer;" id="closeModalBtn">Kapat ✖</span>
+            </div>
+            <div class="stream-wrapper" style="position: relative; background: #000; border-radius: 8px; min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                <img id="playerImg" src="" alt="Video Yükleniyor..." style="max-width: 100%; border-radius: 8px;">
+            </div>
+            <p style="text-align: center; color: #a0aec0; margin-top: 15px; font-size: 0.85rem;">Not: MJPEG kayıtları tarayıcı üzerinden sunucu hızlandırmasıyla oynatılmaktadır. Gerçek kayıttan küçük hız farklılıkları olabilir.</p>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/video_records.js"></script>
