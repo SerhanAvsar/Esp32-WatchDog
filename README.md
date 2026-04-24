@@ -95,7 +95,5 @@ Verilerin panelinize (dashboard'a) düşmemesinin en yaygın sebebi .HTML dosyal
 *(İleride farklı odalardan sensörleri görmek isterseniz tek yapacağınız evdeki telefon veya tabletinizin Google tarayıcısına o güncel IPv4 adresinizi (Örn: `http://192.168.1.45:3000`) yazmak olacaktır.)* Aksi halde telefonunuzdan panele giremezsiniz çünkü localhost o an kullanılan bilgisayarı temsil eder.
 
 
-
-
-Esp32nin txi arduinonun 2.pini
-Esp32nin rxi arduinoun 3.pini
+Esp32nin tx pinini arduinonun 2.pinine
+Esp32nin rx pinini arduinoun 3.pinine
