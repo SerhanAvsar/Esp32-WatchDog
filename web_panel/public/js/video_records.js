@@ -74,24 +74,143 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 }).join('');
 
-                // Modal Event Listeners
+                // --- ADVANCED MJPEG PLAYER LOGIC ---
                 const modal = document.getElementById('videoModal');
                 const playerImg = document.getElementById('playerImg');
+                const playerLoading = document.getElementById('playerLoading');
+                const videoControls = document.getElementById('videoControls');
+                const playPauseBtn = document.getElementById('playPauseBtn');
+                const speedSelect = document.getElementById('speedSelect');
                 const closeModalBtn = document.getElementById('closeModalBtn');
                 const modalTitle = document.getElementById('modalTitle');
 
+                let videoFrames = [];
+                let currentFrameIdx = 0;
+                let isPlaying = false;
+                let playbackSpeed = 1.0;
+                let playInterval = null;
+                const baseFps = 15;
+                let currentObjectURL = null;
+
+                // Dinamik Hız Değişimi
+                speedSelect.addEventListener('change', (e) => {
+                    playbackSpeed = parseFloat(e.target.value);
+                    if (isPlaying) {
+                        pauseVideo();
+                        playVideo();
+                    }
+                });
+
+                // Oynat / Duraklat Butonu
+                playPauseBtn.addEventListener('click', () => {
+                    if (isPlaying) pauseVideo();
+                    else playVideo();
+                });
+
+                function updateBtnState() {
+                    playPauseBtn.textContent = isPlaying ? '⏸' : '▶';
+                }
+
+                function playVideo() {
+                    if (isPlaying) return;
+                    if (currentFrameIdx >= videoFrames.length - 1) {
+                        currentFrameIdx = 0;
+                    }
+                    isPlaying = true;
+                    updateBtnState();
+                    
+                    const intervalMs = (1000 / baseFps) / playbackSpeed;
+                    
+                    playInterval = setInterval(() => {
+                        currentFrameIdx++;
+                        renderFrame();
+                    }, intervalMs);
+                }
+
+                function pauseVideo() {
+                    if (!isPlaying) return;
+                    isPlaying = false;
+                    updateBtnState();
+                    clearInterval(playInterval);
+                }
+
+                function renderFrame() {
+                    if (videoFrames.length === 0) return;
+                    if (currentFrameIdx >= videoFrames.length) {
+                        pauseVideo();
+                        return;
+                    }
+                    
+                    const blob = videoFrames[currentFrameIdx];
+                    const newUrl = URL.createObjectURL(blob);
+                    
+                    playerImg.src = newUrl;
+                    
+                    if (currentObjectURL) {
+                        URL.revokeObjectURL(currentObjectURL);
+                    }
+                    currentObjectURL = newUrl;
+                }
+
+                async function loadAndPlay(filename) {
+                    modalTitle.textContent = `▶ ${filename}`;
+                    playerImg.style.display = 'none';
+                    playerLoading.style.display = 'block';
+                    videoControls.style.display = 'none';
+                    modal.classList.remove('hidden');
+
+                    try {
+                        const response = await fetch(`/video_kayit/${filename}`);
+                        const buffer = await response.arrayBuffer();
+                        const bytes = new Uint8Array(buffer);
+                        
+                        videoFrames = [];
+                        let start = -1;
+                        
+                        // JPEG SOI (FF D8) ve EOI (FF D9) markerlarını bul
+                        for (let i = 0; i < bytes.length - 1; i++) {
+                            if (bytes[i] === 0xFF && bytes[i+1] === 0xD8) {
+                                start = i;
+                            } else if (bytes[i] === 0xFF && bytes[i+1] === 0xD9 && start !== -1) {
+                                videoFrames.push(new Blob([bytes.subarray(start, i + 2)], { type: 'image/jpeg' }));
+                                start = -1;
+                            }
+                        }
+
+                        if (videoFrames.length > 0) {
+                            playerLoading.style.display = 'none';
+                            playerImg.style.display = 'block';
+                            videoControls.style.display = 'flex';
+                            currentFrameIdx = 0;
+                            speedSelect.value = "1.0";
+                            playbackSpeed = 1.0;
+                            playVideo();
+                        } else {
+                            playerLoading.textContent = 'Video kareleri okunamadı!';
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        playerLoading.textContent = 'Video yüklenirken hata oluştu.';
+                    }
+                }
+
+                // Buton Event Listeners
                 document.querySelectorAll('.play-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const filename = e.target.getAttribute('data-filename');
-                        modalTitle.textContent = `▶ ${filename}`;
-                        playerImg.src = `/api/play/${filename}?token=${token}`;
-                        modal.classList.remove('hidden');
+                        loadAndPlay(filename);
                     });
                 });
 
                 closeModalBtn.addEventListener('click', () => {
+                    pauseVideo();
                     modal.classList.add('hidden');
-                    playerImg.src = ''; // Akışı durdur
+                    playerImg.src = ''; 
+                    if (currentObjectURL) {
+                        URL.revokeObjectURL(currentObjectURL);
+                        currentObjectURL = null;
+                    }
+                    videoFrames = []; // Belleği temizle
                 });
                 
             } else {

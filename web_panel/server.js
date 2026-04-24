@@ -370,62 +370,7 @@ app.get('/api/records', verifyToken, requireAdmin, (req, res) => {
     });
 });
 
-// --- VIDEO PLAYBACK (THROTTLED STREAM) ---
-class Throttle extends Transform {
-    constructor(bytesPerSecond) {
-        super();
-        this.bytesPerSecond = bytesPerSecond;
-    }
-    _transform(chunk, encoding, callback) {
-        const delay = (chunk.length / this.bytesPerSecond) * 1000;
-        setTimeout(() => {
-            this.push(chunk);
-            callback();
-        }, delay);
-    }
-}
 
-app.get('/api/play/:filename', (req, res) => {
-    const token = req.query.token;
-    if (!token) return res.status(401).send('Yetkisiz erişim (Token Eksik)');
-    
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
-        if (err || decoded.is_admin !== 1) return res.status(403).send('Yetkisiz erişim');
-        
-        const filename = req.params.filename;
-        const filepath = path.join(recordsDir, filename);
-        
-        if (!fs.existsSync(filepath)) {
-            return res.status(404).send('Kayıt bulunamadı');
-        }
-
-        const fd = fs.openSync(filepath, 'r');
-        const buffer = Buffer.alloc(100);
-        fs.readSync(fd, buffer, 0, 100, 0);
-        fs.closeSync(fd);
-        
-        const str = buffer.toString('utf8');
-        const match = str.match(/--([a-zA-Z0-9]+)/);
-        const boundary = match ? match[1] : '123456789000000000000987654321';
-
-        res.writeHead(200, {
-            'Content-Type': `multipart/x-mixed-replace; boundary=${boundary}`,
-            'Cache-Control': 'no-cache',
-            'Connection': 'close',
-            'Pragma': 'no-cache'
-        });
-
-        const readStream = fs.createReadStream(filepath);
-        // Saniyede ~350 KB hızla gönder (Gerçek oynatma hızına yaklaşmak için)
-        const throttle = new Throttle(350 * 1024);
-        
-        readStream.pipe(throttle).pipe(res);
-        
-        req.on('close', () => {
-            readStream.destroy();
-        });
-    });
-});
 
 // --- ADMIN API ENDPOINTS ---
 // GET /api/admin/users
