@@ -67,11 +67,33 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td><span class="danger-badge" style="background: rgba(49, 130, 206, 0.2); color: #63b3ed; border-color: rgba(49, 130, 206, 0.5);">${record.size}</span></td>
                             <td>${date}</td>
                             <td>
-                                <a href="${fileUrl}" target="_blank" download class="download-btn">İndir / Oynat</a>
+                                <button class="download-btn play-btn" data-filename="${record.name}" style="margin-right: 5px; cursor: pointer;">▶ İzle</button>
+                                <a href="${fileUrl}" target="_blank" download class="download-btn">İndir</a>
                             </td>
                         </tr>
                     `;
                 }).join('');
+
+                // Modal Event Listeners
+                const modal = document.getElementById('videoModal');
+                const playerImg = document.getElementById('playerImg');
+                const closeModalBtn = document.getElementById('closeModalBtn');
+                const modalTitle = document.getElementById('modalTitle');
+
+                document.querySelectorAll('.play-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const filename = e.target.getAttribute('data-filename');
+                        modalTitle.textContent = `▶ ${filename}`;
+                        playerImg.src = `/api/play/${filename}?token=${token}`;
+                        modal.classList.remove('hidden');
+                    });
+                });
+
+                closeModalBtn.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    playerImg.src = ''; // Akışı durdur
+                });
+                
             } else {
                 tbody.innerHTML = `<tr><td colspan="4" class="no-data" style="color:#ef4444">${data.message}</td></tr>`;
             }
