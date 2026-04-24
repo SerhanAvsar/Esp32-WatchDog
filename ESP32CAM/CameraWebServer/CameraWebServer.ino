@@ -139,7 +139,7 @@ void loop() {
         HTTPClient http;
         
         // DİKKAT: 192.168.1.X kısmını kendi Node.js sunucunuzun yerel IP adresiyle değiştirin!
-        http.begin("http://192.168.1.X:3000/api/sensor");
+        http.begin("http://10.87.142.213:3000/api/sensor");
         http.addHeader("Content-Type", "application/json");
         
         String postData = "{\"distance\": " + distanceVal + "}";
@@ -162,7 +162,7 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
         
-        http.begin("http://192.168.1.X:3000/api/gas");
+        http.begin("http://10.87.142.213:3000/api/gas");
         http.addHeader("Content-Type", "application/json");
         
         String postData = "{\"gas_value\": " + gasVal + "}";
