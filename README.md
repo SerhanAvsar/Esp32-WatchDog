@@ -93,3 +93,9 @@ Verilerin panelinize (dashboard'a) düşmemesinin en yaygın sebebi .HTML dosyal
 7. Sensöre el kaldırın... Siyah Node.js ekranında "[BAŞARILI] Mesafe eklendi" yazacak ve yepyeni panellere şak diye veriler düşecek! 
 
 *(İleride farklı odalardan sensörleri görmek isterseniz tek yapacağınız evdeki telefon veya tabletinizin Google tarayıcısına o güncel IPv4 adresinizi (Örn: `http://192.168.1.45:3000`) yazmak olacaktır.)* Aksi halde telefonunuzdan panele giremezsiniz çünkü localhost o an kullanılan bilgisayarı temsil eder.
+
+
+
+
+Esp32nin txi arduinonun 2.pini
+Esp32nin rxi arduinoun 3.pini
