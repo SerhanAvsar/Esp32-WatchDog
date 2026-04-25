@@ -6,6 +6,14 @@
     <title>Kontrol Paneli | Güvenlik Paneli</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: #1a202c; padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; }
+        .close-btn { cursor: pointer; color: #a0aec0; font-size: 1.5rem; }
+    </style>
 </head>
 <body>
     <nav class="navbar glass-nav">
@@ -19,6 +27,7 @@
                 <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
             </div>
             <span id="userGreeting">Hoş Geldiniz</span>
+            <button id="myQrBtn" class="btn primary-btn small-btn" style="background: rgba(49, 130, 206, 0.2); color: #63b3ed; border-color: rgba(49, 130, 206, 0.5);">Erişim QR'ım</button>
             <button id="logoutBtn" class="btn secondary-btn small-btn">Çıkış Yap</button>
         </div>
     </nav>
@@ -81,6 +90,18 @@
             </a>
         </div>
     </main>
+
+    <!-- My QR Code Modal -->
+    <div id="myQrModal" class="modal">
+        <div class="modal-content" style="width: auto; max-width: 300px; text-align: center;">
+            <div class="modal-header">
+                <h3>Erişim QR'ım</h3>
+                <span class="close-btn" id="closeMyQrModal">&times;</span>
+            </div>
+            <div id="myQrcodeBox" style="display: flex; justify-content: center; background: white; padding: 20px; border-radius: 8px;"></div>
+            <p style="margin-top: 15px; font-size: 0.85rem; color: #a0aec0;">Bu QR kodu kameraya okutarak kapı/hareket sensörünü 1 dakikalığına deaktif edebilirsiniz.</p>
+        </div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/notifications.js"></script>

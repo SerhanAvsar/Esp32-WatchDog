@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${u.username}</td>
                         <td>${roleBadge}</td>
                         <td class="action-btns">
+                            <button class="btn secondary-btn small-btn qr-btn" data-id="${u.id}" data-token="${u.qr_token}" data-username="${u.username}" style="background: rgba(49, 130, 206, 0.2); color: #63b3ed; border-color: rgba(49, 130, 206, 0.5);">QR Göster</button>
                             <button class="btn secondary-btn small-btn edit-btn" data-id="${u.id}" data-username="${u.username}" data-admin="${u.is_admin}">Düzenle</button>
                             <button class="btn small-btn delete-btn" data-id="${u.id}" style="background: rgba(229, 62, 62, 0.2); color: #fc8181; border-color: rgba(229, 62, 62, 0.5);">Sil</button>
                         </td>
@@ -61,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 // Attach Event Listeners
+                document.querySelectorAll('.qr-btn').forEach(btn => btn.addEventListener('click', showQrModal));
                 document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', openEditModal));
                 document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', deleteUser));
                 
@@ -73,6 +75,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Modal Logic ---
+    const qrModal = document.getElementById('qrModal');
+    const closeQrBtn = document.getElementById('closeQrModal');
+
+    closeQrBtn.addEventListener('click', () => qrModal.style.display = 'none');
+    
+    let currentQrUserId = null;
+    let currentQrUsername = null;
+
+    function showQrModal(e) {
+        const token = e.target.dataset.token;
+        const username = e.target.dataset.username;
+        const id = e.target.dataset.id;
+        
+        currentQrUserId = id;
+        currentQrUsername = username;
+
+        document.getElementById('qrModalTitle').textContent = username + " - QR";
+        
+        const qrcodeBox = document.getElementById('qrcodeBox');
+        qrcodeBox.innerHTML = ""; // Önceki QR'ı temizle
+        
+        if (token && token !== "null") {
+            new QRCode(qrcodeBox, {
+                text: token,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        } else {
+            qrcodeBox.innerHTML = "<span style='color:black;'>Token bulunamadı.</span>";
+        }
+        
+        qrModal.style.display = 'flex';
+    }
+
+    const resetQrBtn = document.getElementById('resetQrBtn');
+    if (resetQrBtn) {
+        resetQrBtn.addEventListener('click', async () => {
+            if (!currentQrUserId) return;
+            if (!confirm(`DİKKAT: ${currentQrUsername} adlı kullanıcının mevcut QR kodu geçersiz olacak ve yeni bir QR kod üretilecektir. Onaylıyor musunuz?`)) return;
+
+            resetQrBtn.disabled = true;
+            resetQrBtn.textContent = 'Yenileniyor...';
+
+            try {
+                const data = await fetchWithAuth(`/api/admin/users/${currentQrUserId}/reset-qr`, { method: 'POST' });
+                if (data.success) {
+                    // Refresh Modal QR
+                    const qrcodeBox = document.getElementById('qrcodeBox');
+                    qrcodeBox.innerHTML = "";
+                    new QRCode(qrcodeBox, {
+                        text: data.qr_token,
+                        width: 150,
+                        height: 150,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                    
+                    // Refresh Table in Background
+                    loadUsers();
+                    alert('QR Kod başarıyla yenilendi. Diğer yöneticilere bildirim gönderildi.');
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Yenileme başarısız oldu.');
+            } finally {
+                resetQrBtn.disabled = false;
+                resetQrBtn.textContent = '🔄 Bu QR Kodu Yenile';
+            }
+        });
+    }
+
     addBtn.addEventListener('click', () => {
         document.getElementById('modalTitle').textContent = 'Yeni Kullanıcı Ekle';
         document.getElementById('passwordHint').style.display = 'none';
@@ -84,7 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     closeBtn.addEventListener('click', () => modal.style.display = 'none');
-    window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+    window.addEventListener('click', (e) => { 
+        if (e.target === modal) modal.style.display = 'none'; 
+        if (e.target === qrModal) qrModal.style.display = 'none';
+    });
 
     function openEditModal(e) {
         const id = e.target.dataset.id;

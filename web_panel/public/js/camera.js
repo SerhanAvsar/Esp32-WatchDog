@@ -121,4 +121,78 @@ document.addEventListener('DOMContentLoaded', () => {
         recordBtn.style.backgroundColor = '#ef4444';
         recordBtn.style.boxShadow = '0 4px 14px 0 rgba(239, 68, 68, 0.39)';
     }
+
+    // 5. QR Scanner Kontrolü
+    const qrScannerPanel = document.getElementById('qrScannerPanel');
+    const qrScannerBtn = document.getElementById('qrScannerBtn');
+    const qrScannerStatus = document.getElementById('qrScannerStatus');
+    let isScannerRunning = false;
+
+    if (isAdmin && qrScannerPanel) {
+        qrScannerPanel.classList.remove('hidden');
+        
+        // Status Check
+        fetch('/api/admin/scanner/status', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.activeIps.length > 0) {
+                isScannerRunning = true;
+                updateScannerUI(true);
+            }
+        }).catch(err => console.log('Scanner status check failed.'));
+
+        qrScannerBtn.addEventListener('click', () => {
+            const streamUrl = document.getElementById('espIp').value;
+            let cameraIp = '';
+            try {
+                const urlObj = new URL(streamUrl);
+                cameraIp = urlObj.hostname;
+            } catch(e) {
+                alert('Geçersiz IP adresi formatı.');
+                return;
+            }
+
+            const endpoint = isScannerRunning ? '/api/admin/scanner/stop' : '/api/admin/scanner/start';
+            qrScannerBtn.disabled = true;
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ cameraIp })
+            })
+            .then(res => res.json())
+            .then(data => {
+                qrScannerBtn.disabled = false;
+                if (data.success) {
+                    isScannerRunning = !isScannerRunning;
+                    updateScannerUI(isScannerRunning);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(err => {
+                qrScannerBtn.disabled = false;
+                alert('İşlem başarısız oldu.');
+            });
+        });
+    }
+
+    function updateScannerUI(isRunning) {
+        if (isRunning) {
+            qrScannerBtn.textContent = 'Tarayıcıyı Durdur';
+            qrScannerBtn.style.backgroundColor = '#e53e3e';
+            qrScannerStatus.textContent = 'Aktif (Tarama Yapılıyor)';
+            qrScannerStatus.style.color = '#48bb78';
+        } else {
+            qrScannerBtn.textContent = 'Tarayıcıyı Başlat';
+            qrScannerBtn.style.backgroundColor = '#3182ce';
+            qrScannerStatus.textContent = 'Kapalı';
+            qrScannerStatus.style.color = '#a0aec0';
+        }
+    }
 });

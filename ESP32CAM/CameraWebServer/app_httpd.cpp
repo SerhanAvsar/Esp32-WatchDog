@@ -100,6 +100,8 @@ void enable_led(bool en) {  // Turn LED On or Off
 }
 #endif
 
+
+
 static esp_err_t bmp_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
   esp_err_t res = ESP_OK;
@@ -316,6 +318,27 @@ static esp_err_t parse_get(httpd_req_t *req, char **obuf) {
   }
   httpd_resp_send_404(req);
   return ESP_FAIL;
+}
+
+extern unsigned long sensorDisableUntil;
+
+static esp_err_t disable_sensor_handler(httpd_req_t *req) {
+  char *buf = NULL;
+  char _duration[32];
+
+  int duration = 60; // Varsayılan 60 saniye
+  if (parse_get(req, &buf) == ESP_OK) {
+    if (httpd_query_key_value(buf, "duration", _duration, sizeof(_duration)) == ESP_OK) {
+      duration = atoi(_duration);
+    }
+    free(buf);
+  }
+
+  sensorDisableUntil = millis() + (duration * 1000);
+  log_i("Sensor disabled for %d seconds", duration);
+
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+  return httpd_resp_send(req, "OK", 2);
 }
 
 static esp_err_t cmd_handler(httpd_req_t *req) {
@@ -814,6 +837,19 @@ void startCameraServer() {
 #endif
   };
 
+  httpd_uri_t disable_sensor_uri = {
+    .uri = "/disable_sensor",
+    .method = HTTP_GET,
+    .handler = disable_sensor_handler,
+    .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+    ,
+    .is_websocket = false,
+    .handle_ws_control_frames = false,
+    .supported_subprotocol = NULL
+#endif
+  };
+
   ra_filter_init(&ra_filter, 20);
 
   log_i("Starting web server on port: '%d'", config.server_port);
@@ -823,6 +859,7 @@ void startCameraServer() {
     httpd_register_uri_handler(camera_httpd, &status_uri);
     httpd_register_uri_handler(camera_httpd, &capture_uri);
     httpd_register_uri_handler(camera_httpd, &bmp_uri);
+    httpd_register_uri_handler(camera_httpd, &disable_sensor_uri);
 
     httpd_register_uri_handler(camera_httpd, &xclk_uri);
     httpd_register_uri_handler(camera_httpd, &reg_uri);

@@ -125,12 +125,20 @@ void setup() {
   Serial.println("' to connect");
 }
 
+unsigned long sensorDisableUntil = 0; // Sensörün kapalı kalacağı son milisaniye
+
 void loop() {
   if (Serial.available()) {
     String incomingData = Serial.readStringUntil('\n');
     incomingData.trim(); // Satır sonu karakterlerini temizle
 
     if (incomingData.startsWith("DISTANCE:")) {
+      // Sensör QR kod yüzünden devre dışı bırakıldıysa görmezden gel
+      if (millis() < sensorDisableUntil) {
+        Serial.println("Sensör şu an devre dışı! (QR Okundu)");
+        return;
+      }
+
       // Örn: DISTANCE:45.50
       String distanceVal = incomingData.substring(9);
       

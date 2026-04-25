@@ -39,6 +39,13 @@
                     <button id="updateIpBtn" class="btn primary-btn small-btn">Uygula</button>
                 </div>
 
+                <!-- QR Tarayıcı Paneli (Sadece Admin Görecek) -->
+                <div id="qrScannerPanel" class="input-group inline-group hidden" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-bottom: 20px;">
+                    <label style="color: #63b3ed;">Arka Plan QR Tarama (Sunucu):</label>
+                    <button id="qrScannerBtn" class="btn primary-btn small-btn" style="background-color: #3182ce; box-shadow: 0 4px 14px 0 rgba(49, 130, 206, 0.39);">Tarayıcıyı Başlat</button>
+                    <span id="qrScannerStatus" style="font-size: 0.85rem; color: #a0aec0; margin-left: 10px;">Kapalı</span>
+                </div>
+
                 <!-- Kayıt Paneli (Sadece Admin Görecek) -->
                 <div id="recordingPanel" class="input-group inline-group hidden" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                     <label for="recordDuration" style="color: #ef4444;">Kayıt Süresi (Dk): <br><small style="color:var(--text-muted);font-weight:normal;">0 = Süresiz</small></label>

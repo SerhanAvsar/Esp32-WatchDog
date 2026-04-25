@@ -6,6 +6,7 @@
     <title>Kullanıcı Yönetimi | Güvenlik Paneli</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .admin-table th, .admin-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -87,6 +88,18 @@
                 <div id="modalError" class="error-msg" style="margin-bottom: 15px;"></div>
                 <button type="submit" class="btn primary-btn" style="width: 100%;">Kaydet</button>
             </form>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content" style="width: auto; max-width: 300px; text-align: center;">
+            <div class="modal-header">
+                <h3 id="qrModalTitle">Erişim QR'ı</h3>
+                <span class="close-btn" id="closeQrModal">&times;</span>
+            </div>
+            <div id="qrcodeBox" style="display: flex; justify-content: center; background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px;"></div>
+            <button id="resetQrBtn" class="btn primary-btn small-btn" style="width: 100%; background: rgba(229, 62, 62, 0.2); color: #fc8181; border: 1px solid rgba(229, 62, 62, 0.5);">🔄 Bu QR Kodu Yenile</button>
         </div>
     </div>
 

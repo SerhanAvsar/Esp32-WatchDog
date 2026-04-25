@@ -14,8 +14,11 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "jpeg-js": "^0.4.4",
     "jsonwebtoken": "^9.0.3",
+    "jsqr": "^1.4.0",
     "socket.io": "^4.8.3",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^6.0.1",
+    "uuid": "^14.0.0"
   }
 }

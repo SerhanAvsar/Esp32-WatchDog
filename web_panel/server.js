@@ -221,6 +221,104 @@ app.get('/api/gas_logs', (req, res) => {
 // o IP'yi buraya yazabilirsiniz (örn: '192.168.220.1' veya '10.37.38.48').
 const HOST = '0.0.0.0'; 
 
+// API Endpoint: Get User QR
+app.get('/api/user/qr', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    db.get('SELECT qr_token FROM users WHERE id = ?', [userId], (err, row) => {
+        if (err || !row) return res.status(500).json({ success: false, message: 'Kullanıcı bulunamadı.' });
+        res.json({ success: true, qr_token: row.qr_token });
+    });
+});
+
+// --- QR SCANNER LOGIC (Background Worker) ---
+const jsQR = require('jsqr');
+const jpeg = require('jpeg-js');
+const activeScanners = new Map(); // ip -> interval
+
+function processQR(ip) {
+    const httpModule = require('http');
+    const captureUrl = `http://${ip}/capture`;
+    
+    httpModule.get(captureUrl, (response) => {
+        if (response.statusCode !== 200) return;
+        
+        const chunks = [];
+        response.on('data', chunk => chunks.push(chunk));
+        response.on('end', () => {
+            try {
+                const buffer = Buffer.concat(chunks);
+                const rawImageData = jpeg.decode(buffer, { useTArray: true });
+                const code = jsQR(rawImageData.data, rawImageData.width, rawImageData.height);
+                
+                if (code) {
+                    const qrToken = code.data;
+                    db.get('SELECT id, username FROM users WHERE qr_token = ?', [qrToken], (err, user) => {
+                        if (!err && user) {
+                            // Eşleşen kullanıcı bulundu!
+                            console.log(`[QR ACCESS] Başarılı Giriş: ${user.username}`);
+                            
+                            // 1. Audit Log & Bildirim Gönder (Sadece Adminlere)
+                            db.all('SELECT id FROM users WHERE is_admin = 1', [], (err, admins) => {
+                                if (!err && admins) {
+                                    const stmt = db.prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)');
+                                    admins.forEach(admin => {
+                                        stmt.run(admin.id, 'access', '✅ QR ile Giriş!', `${user.username} isimli kullanıcı QR okuttu. Kapı hareket sensörü 1 dakika deaktif edildi.`);
+                                    });
+                                    stmt.finalize();
+                                }
+                            });
+                            
+                            io.to('admin_room').emit('notification', {
+                                type: 'access',
+                                title: '✅ QR ile Giriş!',
+                                message: `${user.username} isimli kullanıcı QR okuttu. Kapı hareket sensörü 1 dakika deaktif edildi.`,
+                                time: new Date().toLocaleTimeString('tr-TR')
+                            });
+
+                            // 2. ESP32 Sensörünü Kapat (1 Dakika)
+                            const disableUrl = `http://${ip}/disable_sensor?duration=60`;
+                            httpModule.get(disableUrl).on('error', () => {});
+                            
+                            // Opsiyonel: Peş peşe çok okumayı önlemek için taramayı geçici durdurabiliriz ama ESP zaten 1 dk sensoru kapatıyor.
+                        }
+                    });
+                }
+            } catch (e) {
+                // JPEG decode hataları genelde kameranın yarım kare göndermesinden kaynaklanır, görmezden gel.
+            }
+        });
+    }).on('error', () => {
+        // Kamera bağlantısı koptuysa görmezden gel
+    });
+}
+
+app.post('/api/admin/scanner/start', verifyToken, requireAdmin, (req, res) => {
+    const { cameraIp } = req.body;
+    if (!cameraIp) return res.status(400).json({ success: false, message: 'Kamera IP zorunludur.' });
+    if (activeScanners.has(cameraIp)) return res.status(400).json({ success: false, message: 'Bu kamera için tarayıcı zaten aktif.' });
+
+    // Cihazı yormamak için her 1.5 saniyede bir fotoğraf çekerek (capture) analiz et
+    const interval = setInterval(() => processQR(cameraIp), 1500);
+    activeScanners.set(cameraIp, interval);
+    res.json({ success: true, message: 'Arka plan QR Tarayıcı başlatıldı.' });
+});
+
+app.post('/api/admin/scanner/stop', verifyToken, requireAdmin, (req, res) => {
+    const { cameraIp } = req.body;
+    if (activeScanners.has(cameraIp)) {
+        clearInterval(activeScanners.get(cameraIp));
+        activeScanners.delete(cameraIp);
+        res.json({ success: true, message: 'QR Tarayıcı durduruldu.' });
+    } else {
+        res.status(400).json({ success: false, message: 'Tarayıcı zaten kapalı.' });
+    }
+});
+
+app.get('/api/admin/scanner/status', verifyToken, requireAdmin, (req, res) => {
+    res.json({ success: true, activeIps: Array.from(activeScanners.keys()) });
+});
+
+
 // --- Helper: Send Audit Notification ---
 function sendAuditNotification(actorId, title, message) {
     db.all('SELECT id FROM users WHERE is_admin = 1 AND id != ?', [actorId], async (err, admins) => {
@@ -375,7 +473,7 @@ app.get('/api/records', verifyToken, requireAdmin, (req, res) => {
 // --- ADMIN API ENDPOINTS ---
 // GET /api/admin/users
 app.get('/api/admin/users', verifyToken, requireAdmin, (req, res) => {
-    const query = 'SELECT id, username, is_admin FROM users ORDER BY id ASC';
+    const query = 'SELECT id, username, is_admin, qr_token FROM users ORDER BY id ASC';
     db.all(query, [], (err, rows) => {
         if (err) return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
         res.json({ success: true, users: rows });
@@ -387,8 +485,11 @@ app.post('/api/admin/users', verifyToken, requireAdmin, (req, res) => {
     const { username, password, is_admin } = req.body;
     if (!username || !password) return res.status(400).json({ success: false, message: 'Kullanıcı adı ve şifre zorunludur.' });
     
-    const query = 'INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)';
-    db.run(query, [username, password, is_admin ? 1 : 0], function(err) {
+    const { v4: uuidv4 } = require('uuid');
+    const qr_token = uuidv4();
+
+    const query = 'INSERT INTO users (username, password, is_admin, qr_token) VALUES (?, ?, ?, ?)';
+    db.run(query, [username, password, is_admin ? 1 : 0, qr_token], function(err) {
         if (err) {
             if (err.message.includes('UNIQUE constraint failed')) {
                 return res.status(400).json({ success: false, message: 'Bu kullanıcı adı zaten mevcut.' });
@@ -481,6 +582,31 @@ app.delete('/api/admin/users/:id', verifyToken, requireAdmin, (req, res) => {
             );
             
             res.json({ success: true, message: 'Kullanıcı silindi.' });
+        });
+    });
+});
+
+// POST /api/admin/users/:id/reset-qr
+app.post('/api/admin/users/:id/reset-qr', verifyToken, requireAdmin, (req, res) => {
+    const { id } = req.params;
+    
+    db.get('SELECT username FROM users WHERE id = ?', [id], (err, row) => {
+        if (err || !row) return res.status(404).json({ success: false, message: 'Kullanıcı bulunamadı.' });
+        
+        const { v4: uuidv4 } = require('uuid');
+        const new_qr_token = uuidv4();
+        
+        db.run('UPDATE users SET qr_token = ? WHERE id = ?', [new_qr_token, id], function(updateErr) {
+            if (updateErr) return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
+            
+            // Audit Log: QR Reset
+            sendAuditNotification(
+                req.user.id,
+                '🔄 QR Kodu Yenilendi',
+                `Yönetici (${req.user.username}), "${row.username}" adlı kullanıcının QR kodunu yeniledi.`
+            );
+            
+            res.json({ success: true, qr_token: new_qr_token, message: 'QR Kodu başarıyla yenilendi.' });
         });
     });
 });
