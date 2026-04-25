@@ -119,38 +119,42 @@
         </div>
     </main>
 
-    <!-- Video Player Modal -->
-    <div id="videoModal" class="modal hidden">
-        <div class="modal-content glass-card" style="max-width: 800px; padding: 20px;">
-            <div class="camera-header" style="margin-bottom: 15px;">
-                <h3 id="modalTitle">Video Oynatılıyor</h3>
-                <span class="status-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; cursor: pointer;" id="closeModalBtn">Kapat ✖</span>
-            </div>
-            <div class="stream-wrapper" style="position: relative; background: #000; border-radius: 8px; min-height: 300px; display: flex; align-items: center; justify-content: center;">
-                <p id="playerLoading" style="color: white; position: absolute;">Yükleniyor...</p>
-                <img id="playerImg" src="" alt="" style="max-width: 100%; border-radius: 8px; display: none;">
-            </div>
-            
-            <!-- Video Controls -->
-            <div id="videoControls" style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: none;">
-                <button id="playPauseBtn" class="btn primary-btn small-btn" style="background-color: #3182ce; width: 50px;">⏸</button>
-                
-                <div style="display: flex; align-items: center; gap: 10px; color: #e2e8f0;">
-                    <label for="speedSelect" style="font-size: 0.9rem;">Hız:</label>
-                    <select id="speedSelect" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px; outline: none;">
-                        <option value="0.25">0.25x</option>
-                        <option value="0.50">0.50x</option>
-                        <option value="0.75">0.75x</option>
-                        <option value="1.0" selected>1.0x (Normal)</option>
-                        <option value="1.25">1.25x</option>
-                        <option value="1.50">1.50x</option>
-                        <option value="1.75">1.75x</option>
-                        <option value="2.0">2.0x</option>
-                    </select>
+    <!-- Video Player Container (Hidden initially, moved dynamically) -->
+    <table style="display: none;">
+        <tr id="videoPlayerRow">
+            <td colspan="4" style="padding: 0; border: none;">
+                <div id="videoPlayerContainer" class="glass-card" style="margin: 10px; padding: 20px; background: rgba(0,0,0,0.2); border: 1px solid rgba(49, 130, 206, 0.3);">
+                    <div class="camera-header" style="margin-bottom: 15px;">
+                        <h3 id="modalTitle">Video Oynatılıyor</h3>
+                        <span class="status-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; cursor: pointer;" id="closeModalBtn">Kapat ✖</span>
+                    </div>
+                    <div class="stream-wrapper" style="position: relative; background: #000; border-radius: 8px; min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                        <p id="playerLoading" style="color: white; position: absolute;">Yükleniyor...</p>
+                        <img id="playerImg" src="" alt="" style="max-width: 100%; border-radius: 8px; display: none;">
+                    </div>
+                    
+                    <!-- Video Controls -->
+                    <div id="videoControls" style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: none;">
+                        <button id="playPauseBtn" class="btn primary-btn small-btn" style="background-color: #3182ce; width: 50px;">⏸</button>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px; color: #e2e8f0;">
+                            <label for="speedSelect" style="font-size: 0.9rem;">Hız:</label>
+                            <select id="speedSelect" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 4px; outline: none;">
+                                <option value="0.25">0.25x</option>
+                                <option value="0.50">0.50x</option>
+                                <option value="0.75">0.75x</option>
+                                <option value="1.0" selected>1.0x (Normal)</option>
+                                <option value="1.25">1.25x</option>
+                                <option value="1.50">1.50x</option>
+                                <option value="1.75">1.75x</option>
+                                <option value="2.0">2.0x</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </td>
+        </tr>
+    </table>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/notifications.js"></script>
