@@ -77,4 +77,75 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle Settings
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsModal = document.getElementById('closeSettingsModal');
+    const settingsForm = document.getElementById('settingsForm');
+
+    if (settingsBtn && settingsModal) {
+        // Only show Admin setting if user is admin
+        if (isAdmin !== 'true') {
+            const adminSet = document.getElementById('adminNotificationSetting');
+            if (adminSet) adminSet.style.display = 'none';
+        }
+
+        closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
+        window.addEventListener('click', (e) => { 
+            if (e.target === settingsModal) settingsModal.style.display = 'none'; 
+        });
+
+        settingsBtn.addEventListener('click', async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch('/api/user/settings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.success && data.settings) {
+                    document.getElementById('emailInput').value = data.settings.email_address || '';
+                    document.getElementById('notifyMotionCheck').checked = data.settings.notify_motion_sensor === 1;
+                    document.getElementById('notifyAdminCheck').checked = data.settings.notify_admin_change === 1;
+                    settingsModal.style.display = 'flex';
+                } else {
+                    alert('Ayarlar yüklenemedi.');
+                }
+            } catch (err) {
+                alert('Ayarlar alınırken hata oluştu.');
+            }
+        });
+
+        settingsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            
+            const payload = {
+                email_address: document.getElementById('emailInput').value,
+                notify_motion_sensor: document.getElementById('notifyMotionCheck').checked,
+                notify_admin_change: document.getElementById('notifyAdminCheck').checked
+            };
+
+            try {
+                const res = await fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Ayarlarınız başarıyla kaydedildi!');
+                    settingsModal.style.display = 'none';
+                } else {
+                    alert(data.message || 'Kayıt başarısız.');
+                }
+            } catch (err) {
+                alert('Kayıt sırasında hata oluştu.');
+            }
+        });
+    }
+
 });

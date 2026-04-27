@@ -28,6 +28,7 @@
             </div>
             <span id="userGreeting">Hoş Geldiniz</span>
             <button id="myQrBtn" class="btn primary-btn small-btn" style="background: rgba(49, 130, 206, 0.2); color: #63b3ed; border-color: rgba(49, 130, 206, 0.5);">Erişim QR'ım</button>
+            <button id="settingsBtn" class="btn secondary-btn small-btn">⚙️ Ayarlar</button>
             <button id="logoutBtn" class="btn secondary-btn small-btn">Çıkış Yap</button>
         </div>
     </nav>
@@ -100,6 +101,31 @@
             </div>
             <div id="myQrcodeBox" style="display: flex; justify-content: center; background: white; padding: 20px; border-radius: 8px;"></div>
             <p style="margin-top: 15px; font-size: 0.85rem; color: #a0aec0;">Bu QR kodu kameraya okutarak kapı/hareket sensörünü 1 dakikalığına deaktif edebilirsiniz.</p>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="width: 100%; max-width: 400px;">
+            <div class="modal-header">
+                <h3>Bildirim Ayarları</h3>
+                <span class="close-btn" id="closeSettingsModal">&times;</span>
+            </div>
+            <form id="settingsForm">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: #a0aec0;">E-posta Adresi:</label>
+                    <input type="email" id="emailInput" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;" placeholder="ornek@gmail.com">
+                </div>
+                <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                    <label style="color: #a0aec0;">Hareket Algılandığında Bildir</label>
+                    <input type="checkbox" id="notifyMotionCheck" style="transform: scale(1.2);">
+                </div>
+                <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;" id="adminNotificationSetting">
+                    <label style="color: #a0aec0;">Sistem Güncellendiğinde Bildir</label>
+                    <input type="checkbox" id="notifyAdminCheck" style="transform: scale(1.2);">
+                </div>
+                <button type="submit" class="btn primary-btn" style="width: 100%;">Kaydet</button>
+            </form>
         </div>
     </div>
 

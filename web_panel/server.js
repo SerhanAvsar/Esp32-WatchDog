@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const cors = require('cors');
@@ -7,6 +8,18 @@ const jwt = require('jsonwebtoken');
 const { verifyToken, requireAdmin, SECRET_KEY } = require('./middleware/auth');
 const http = require('http');
 const { Transform } = require('stream');
+const nodemailer = require('nodemailer');
+
+// --- E-posta Gönderici (Nodemailer) Ayarı ---
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: process.env.SMTP_PORT || 465,
+    secure: true,
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    }
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -96,12 +109,22 @@ app.post('/api/sensor', (req, res) => {
             }
             console.log(`[BAŞARILI] Mesafe verisi kaydedildi: ${distance} cm`);
             
-            // Tüm adminleri bul ve bildirim kaydet
-            db.all('SELECT id FROM users WHERE is_admin = 1', [], (err, admins) => {
-                if (!err && admins) {
+            // Tüm adminleri bul ve bildirim kaydet, e-posta ayarı açık olanlara mail gönder
+            db.all('SELECT id, is_admin, email_address, notify_motion_sensor FROM users', [], (err, users) => {
+                if (!err && users) {
                     const stmt = db.prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)');
-                    admins.forEach(admin => {
-                        stmt.run(admin.id, 'motion', 'Hareket Tespiti!', `Kapı sensöründe ${distance} cm mesafede hareket algılandı.`);
+                    users.forEach(user => {
+                        if (user.is_admin === 1) {
+                            stmt.run(user.id, 'motion', 'Hareket Tespiti!', `Kapı sensöründe ${distance} cm mesafede hareket algılandı.`);
+                        }
+                        if (user.notify_motion_sensor === 1 && user.email_address) {
+                            transporter.sendMail({
+                                from: process.env.SMTP_USER,
+                                to: user.email_address,
+                                subject: 'Sistem Uyarı: Hareket Tespiti!',
+                                text: `Kapı sensöründe ${distance} cm mesafede hareket algılandı.\nTarih: ${new Date().toLocaleString('tr-TR')}`
+                            }).catch(e => console.error("Mail error:", e));
+                        }
                     });
                     stmt.finalize();
                 }
@@ -230,6 +253,27 @@ app.get('/api/user/qr', verifyToken, (req, res) => {
     });
 });
 
+// API Endpoint: Get User Settings
+app.get('/api/user/settings', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    db.get('SELECT email_address, notify_motion_sensor, notify_admin_change FROM users WHERE id = ?', [userId], (err, row) => {
+        if (err || !row) return res.status(500).json({ success: false, message: 'Kullanıcı bulunamadı.' });
+        res.json({ success: true, settings: row });
+    });
+});
+
+// API Endpoint: Update User Settings
+app.put('/api/user/settings', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const { email_address, notify_motion_sensor, notify_admin_change } = req.body;
+    
+    const query = 'UPDATE users SET email_address = ?, notify_motion_sensor = ?, notify_admin_change = ? WHERE id = ?';
+    db.run(query, [email_address, notify_motion_sensor ? 1 : 0, notify_admin_change ? 1 : 0, userId], function(err) {
+        if (err) return res.status(500).json({ success: false, message: 'Veritabanı hatası.' });
+        res.json({ success: true, message: 'Ayarlar güncellendi.' });
+    });
+});
+
 // --- QR SCANNER LOGIC (Background Worker) ---
 const jsQR = require('jsqr');
 const jpeg = require('jpeg-js');
@@ -321,11 +365,20 @@ app.get('/api/admin/scanner/status', verifyToken, requireAdmin, (req, res) => {
 
 // --- Helper: Send Audit Notification ---
 function sendAuditNotification(actorId, title, message) {
-    db.all('SELECT id FROM users WHERE is_admin = 1 AND id != ?', [actorId], async (err, admins) => {
+    db.all('SELECT id, email_address, notify_admin_change FROM users WHERE is_admin = 1 AND id != ?', [actorId], async (err, admins) => {
         if (!err && admins && admins.length > 0) {
             const stmt = db.prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)');
             admins.forEach(admin => {
                 stmt.run(admin.id, 'audit', title, message);
+                
+                if (admin.notify_admin_change === 1 && admin.email_address) {
+                    transporter.sendMail({
+                        from: process.env.SMTP_USER,
+                        to: admin.email_address,
+                        subject: `Sistem Güncellemesi: ${title}`,
+                        text: `${message}\n\nTarih: ${new Date().toLocaleString('tr-TR')}`
+                    }).catch(e => console.error("Admin mail error:", e));
+                }
             });
             stmt.finalize();
 

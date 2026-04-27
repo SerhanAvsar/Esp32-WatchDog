@@ -28,6 +28,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
                     }
                     
                     db.run(`ALTER TABLE users ADD COLUMN qr_token TEXT`, (alterErr2) => {
+                        db.run(`ALTER TABLE users ADD COLUMN email_address TEXT`, () => {});
+                        db.run(`ALTER TABLE users ADD COLUMN notify_motion_sensor INTEGER DEFAULT 0`, () => {});
+                        db.run(`ALTER TABLE users ADD COLUMN notify_admin_change INTEGER DEFAULT 0`, () => {});
+
                         // Sütun eklendiğinde veya önceden varsa (NULL olanları bul) uuid ata
                         db.all(`SELECT id FROM users WHERE qr_token IS NULL`, [], (err, rows) => {
                             if (!err && rows) {
