@@ -588,12 +588,26 @@ app.put('/api/admin/users/:id', verifyToken, requireAdmin, (req, res) => {
             const query = 'UPDATE users SET username = ?, password = ?, is_admin = ? WHERE id = ?';
             db.run(query, [username, password, is_admin ? 1 : 0, id], function(err) {
                 if (err) return res.status(500).json({ success: false, message: err.message });
+                
+                sendAuditNotification(
+                    req.user.id,
+                    '🔄 Kullanıcı Güncellendi',
+                    `Yönetici (${req.user.username}), "${row.username}" adlı kullanıcının bilgilerini ve şifresini güncelledi.`
+                );
+                
                 res.json({ success: true, message: 'Kullanıcı güncellendi.' });
             });
         } else {
             const query = 'UPDATE users SET username = ?, is_admin = ? WHERE id = ?';
             db.run(query, [username, is_admin ? 1 : 0, id], function(err) {
                 if (err) return res.status(500).json({ success: false, message: err.message });
+                
+                sendAuditNotification(
+                    req.user.id,
+                    '🔄 Kullanıcı Güncellendi',
+                    `Yönetici (${req.user.username}), "${row.username}" adlı kullanıcının bilgilerini güncelledi.`
+                );
+                
                 res.json({ success: true, message: 'Kullanıcı güncellendi.' });
             });
         }
