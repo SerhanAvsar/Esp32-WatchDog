@@ -61,11 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     qrcodeBox.innerHTML = "";
                     new QRCode(qrcodeBox, {
                         text: data.qr_token,
-                        width: 150,
-                        height: 150,
+                        width: 250,
+                        height: 250,
                         colorDark : "#000000",
                         colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
+                        correctLevel : QRCode.CorrectLevel.M
                     });
                     myQrModal.style.display = 'flex';
                 } else {

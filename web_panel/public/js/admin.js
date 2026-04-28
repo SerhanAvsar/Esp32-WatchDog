@@ -99,11 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (token && token !== "null") {
             new QRCode(qrcodeBox, {
                 text: token,
-                width: 150,
-                height: 150,
+                width: 250,
+                height: 250,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+                correctLevel : QRCode.CorrectLevel.M
             });
         } else {
             qrcodeBox.innerHTML = "<span style='color:black;'>Token bulunamadı.</span>";
@@ -129,11 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     qrcodeBox.innerHTML = "";
                     new QRCode(qrcodeBox, {
                         text: data.qr_token,
-                        width: 150,
-                        height: 150,
+                        width: 250,
+                        height: 250,
                         colorDark : "#000000",
                         colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
+                        correctLevel : QRCode.CorrectLevel.M
                     });
                     
                     // Refresh Table in Background

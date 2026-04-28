@@ -276,37 +276,78 @@ app.put('/api/user/settings', verifyToken, (req, res) => {
 
 // --- QR SCANNER LOGIC (Background Worker) ---
 const jsQR = require('jsqr');
-const jpeg = require('jpeg-js');
-const activeScanners = new Map(); // ip -> interval
+const { Jimp } = require('jimp');
+const activeScanners = new Map(); // ip -> boolean (is active)
+const scanningLock = new Map(); // ip -> boolean (is processing)
 
 function processQR(ip) {
+    if (!activeScanners.get(ip)) return;
+    if (scanningLock.get(ip)) return;
+    
+    scanningLock.set(ip, true);
+
     const httpModule = require('http');
     const captureUrl = `http://${ip}/capture`;
     
-    httpModule.get(captureUrl, (response) => {
-        if (response.statusCode !== 200) return;
+    const request = httpModule.get(captureUrl, { timeout: 3000 }, (response) => {
+        if (response.statusCode !== 200) {
+            console.log(`[QR SCANNER] Failed to get capture from ${ip}. Status: ${response.statusCode}`);
+            scanningLock.set(ip, false);
+            setTimeout(() => processQR(ip), 500);
+            return;
+        }
         
         const chunks = [];
         response.on('data', chunk => chunks.push(chunk));
-        response.on('end', () => {
+        response.on('end', async () => {
             try {
                 const buffer = Buffer.concat(chunks);
-                const rawImageData = jpeg.decode(buffer, { useTArray: true });
-                const code = jsQR(rawImageData.data, rawImageData.width, rawImageData.height);
+                // Görüntü ön işleme: Siyah beyaz yap, kontrast artır ki kameranın zayıflığını telafi edelim
+                const image = await Jimp.read(buffer);
+                image.greyscale();
+                // Jimp v1'de contrast(value) (-1 to 1) 0.5 ile %50 arttırılır. Yeni sürüm için test:
+                try { image.contrast(0.5); } catch(e){} 
+
+                const code = jsQR(image.bitmap.data, image.bitmap.width, image.bitmap.height, { inversionAttempts: "attemptBoth" });
                 
                 if (code) {
+                    console.log(`[QR SCANNER] Raw QR detected: ${code.data}`);
                     const qrToken = code.data;
-                    db.get('SELECT id, username FROM users WHERE qr_token = ?', [qrToken], (err, user) => {
+                    db.get('SELECT id, username, is_admin FROM users WHERE qr_token = ?', [qrToken], (err, user) => {
                         if (!err && user) {
                             // Eşleşen kullanıcı bulundu!
                             console.log(`[QR ACCESS] Başarılı Giriş: ${user.username}`);
+
+                            // 1. ESP32 Sensörünü Kapat (1 Dakika)
+                            const disableUrl = `http://${ip}/disable_sensor?duration=60`;
+                            httpModule.get(disableUrl, (res) => {
+                                res.on('data', () => {});
+                                res.on('end', () => console.log(`[QR SCANNER] ESP32 Sensörü 1 dk kapatıldı.`));
+                            }).on('error', (e) => console.log('[QR SCANNER] Disable Sensor Hatası:', e.message));
                             
-                            // 1. Audit Log & Bildirim Gönder (Sadece Adminlere)
-                            db.all('SELECT id FROM users WHERE is_admin = 1', [], (err, admins) => {
+                            // 2. Audit Log & E-posta Bildirimi Gönder (Adminlere)
+                            db.all('SELECT id, email_address FROM users WHERE is_admin = 1', [], (err, admins) => {
                                 if (!err && admins) {
                                     const stmt = db.prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)');
+                                    
+                                    const notifyTitle = '✅ QR ile Giriş!';
+                                    const notifyMessage = `${user.username} isimli kullanıcı QR okuttu. Kapı hareket sensörü 1 dakika deaktif edildi.`;
+
                                     admins.forEach(admin => {
-                                        stmt.run(admin.id, 'access', '✅ QR ile Giriş!', `${user.username} isimli kullanıcı QR okuttu. Kapı hareket sensörü 1 dakika deaktif edildi.`);
+                                        // DB içi bildirim (Tüm adminlere düşer)
+                                        stmt.run(admin.id, 'access', notifyTitle, notifyMessage);
+
+                                        // Mail kuralı: Kendi hesabına giriş yapıyorsa kendine mail atma, sadece DİĞER adminlere at.
+                                        // Admin olmayan biri giriyorsa TÜM adminlere at.
+                                        if (admin.id !== user.id && admin.email_address && process.env.SMTP_USER) {
+                                            const mailOptions = {
+                                                from: `"Güvenlik Paneli" <${process.env.SMTP_USER}>`,
+                                                to: admin.email_address,
+                                                subject: '🚨 QR Erişim Uyarısı',
+                                                text: `Sistem Bilgisi: ${user.username} isimli kullanıcı QR kod okutarak giriş yaptı.\nTarih: ${new Date().toLocaleString('tr-TR')}\nKapı/Hareket sensörü 1 dakika boyunca devre dışı bırakıldı.`
+                                            };
+                                            transporter.sendMail(mailOptions).catch(e => console.log('[MAIL ERROR]', e.message));
+                                        }
                                     });
                                     stmt.finalize();
                                 }
@@ -318,21 +359,33 @@ function processQR(ip) {
                                 message: `${user.username} isimli kullanıcı QR okuttu. Kapı hareket sensörü 1 dakika deaktif edildi.`,
                                 time: new Date().toLocaleTimeString('tr-TR')
                             });
-
-                            // 2. ESP32 Sensörünü Kapat (1 Dakika)
-                            const disableUrl = `http://${ip}/disable_sensor?duration=60`;
-                            httpModule.get(disableUrl).on('error', () => {});
-                            
-                            // Opsiyonel: Peş peşe çok okumayı önlemek için taramayı geçici durdurabiliriz ama ESP zaten 1 dk sensoru kapatıyor.
+                        } else {
+                            console.log(`[QR SCANNER] Geçiçersiz veya veritabanında bulunmayan QR: ${qrToken}`);
                         }
                     });
+                } else {
+                    console.log(`[QR SCANNER] Frame okundu ama QR bulunamadı. (Boyut: ${image.bitmap.width}x${image.bitmap.height})`);
                 }
             } catch (e) {
-                // JPEG decode hataları genelde kameranın yarım kare göndermesinden kaynaklanır, görmezden gel.
+                console.log(`[QR SCANNER] Decode/Jimp Hatası:`, e.message);
+            } finally {
+                scanningLock.set(ip, false);
+                setTimeout(() => processQR(ip), 500);
             }
         });
-    }).on('error', () => {
-        // Kamera bağlantısı koptuysa görmezden gel
+    });
+
+    request.on('timeout', () => {
+        console.log(`[QR SCANNER] Timeout! ESP32 cevap vermiyor.`);
+        request.destroy();
+        scanningLock.set(ip, false);
+        setTimeout(() => processQR(ip), 1000);
+    });
+
+    request.on('error', (err) => {
+        console.log(`[QR SCANNER] HTTP Request Hatası:`, err.message);
+        scanningLock.set(ip, false);
+        setTimeout(() => processQR(ip), 1000);
     });
 }
 
@@ -341,17 +394,17 @@ app.post('/api/admin/scanner/start', verifyToken, requireAdmin, (req, res) => {
     if (!cameraIp) return res.status(400).json({ success: false, message: 'Kamera IP zorunludur.' });
     if (activeScanners.has(cameraIp)) return res.status(400).json({ success: false, message: 'Bu kamera için tarayıcı zaten aktif.' });
 
-    // Cihazı yormamak için her 1.5 saniyede bir fotoğraf çekerek (capture) analiz et
-    const interval = setInterval(() => processQR(cameraIp), 1500);
-    activeScanners.set(cameraIp, interval);
+    // Cihazı yormamak ve hızlı okumak için recursive döngü kullanıyoruz
+    activeScanners.set(cameraIp, true);
+    processQR(cameraIp);
     res.json({ success: true, message: 'Arka plan QR Tarayıcı başlatıldı.' });
 });
 
 app.post('/api/admin/scanner/stop', verifyToken, requireAdmin, (req, res) => {
     const { cameraIp } = req.body;
     if (activeScanners.has(cameraIp)) {
-        clearInterval(activeScanners.get(cameraIp));
         activeScanners.delete(cameraIp);
+        scanningLock.delete(cameraIp);
         res.json({ success: true, message: 'QR Tarayıcı durduruldu.' });
     } else {
         res.status(400).json({ success: false, message: 'Tarayıcı zaten kapalı.' });
